@@ -1,0 +1,26 @@
+{
+  "updatedAt": "2026-08-27T18:33:00-03:00",
+  "source": "TEST DATA ONLY - replace with normalized official data",
+  "radars": [
+    {
+      "id": "TEST-SC-001",
+      "state": "SC",
+      "road": "BR-101 TESTE",
+      "lat": -27.5945,
+      "lon": -48.5477,
+      "speed": 80,
+      "heading": 180,
+      "type": "fixed"
+    },
+    {
+      "id": "TEST-SC-002",
+      "state": "SC",
+      "road": "BR-101 TESTE",
+      "lat": -27.61,
+      "lon": -48.5485,
+      "speed": 100,
+      "heading": 0,
+      "type": "fixed"
+    }
+  ]
+}

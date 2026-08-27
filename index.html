@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111111">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Radar BR</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <main id="app">
+    <section id="statusPanel">
+      <div id="gpsStatus">GPS: aguardando</div>
+      <div id="dbStatus">Base: não carregada</div>
+    </section>
+
+    <section id="speedPanel">
+      <div id="speedValue">--</div>
+      <div id="speedUnit">km/h</div>
+    </section>
+
+    <section id="radarPanel" class="hidden">
+      <div id="radarTitle">RADAR</div>
+      <div id="radarLimit">--</div>
+      <div id="radarLimitUnit">km/h</div>
+      <div id="radarDistance">-- m</div>
+      <div id="radarRoad">--</div>
+    </section>
+
+    <section id="messagePanel">
+      <div id="message">Inicializando...</div>
+    </section>
+
+    <section id="controls">
+      <button id="btnStart" type="button">INICIAR GPS</button>
+      <button id="btnUpdate" type="button">ATUALIZAR RADARES</button>
+    </section>
+  </main>
+
+  <script src="js/helper.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/alert.js"></script>
+  <script src="js/radar.js"></script>
+  <script src="js/gps.js"></script>
+  <script src="js/update.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
