@@ -4,6 +4,7 @@ var radarPreviousDistance = {};
 
 var RADAR_MAX_DISTANCE = 1500;
 var RADAR_MAX_DIRECTION_ERROR = 65;
+var RADAR_BEHIND_ANGLE = 90;
 
 function radarSetList(list) {
   radarList = list || [];
@@ -20,7 +21,7 @@ function radarIsApproaching(radar, distance) {
     return true;
   }
 
-  return distance <= previous + 8;
+  return distance <= previous + 3;
 }
 
 function radarMatchesDirection(position, radar, bearingToRadar) {
@@ -41,6 +42,26 @@ function radarMatchesDirection(position, radar, bearingToRadar) {
   }
 
   return true;
+}
+
+function radarActiveIsBehind(position) {
+  var bearingToRadar;
+
+  if (!radarActive ||
+      typeof position.heading !== "number" ||
+      isNaN(position.heading) ||
+      position.heading < 0) {
+    return false;
+  }
+
+  bearingToRadar = helperBearingDegrees(
+    position.latitude,
+    position.longitude,
+    radarActive.lat,
+    radarActive.lon
+  );
+
+  return helperAngleDifference(position.heading, bearingToRadar) > RADAR_BEHIND_ANGLE;
 }
 
 function radarFindNearest(position) {
@@ -91,12 +112,24 @@ function radarFindNearest(position) {
   return best;
 }
 
+function radarClear() {
+  radarActive = null;
+  alertReset();
+  appShowRadar(null);
+}
+
 function radarCheck(position) {
-  var result = radarFindNearest(position);
+  var result;
+
+  if (radarActiveIsBehind(position)) {
+    radarClear();
+    return;
+  }
+
+  result = radarFindNearest(position);
 
   if (!result) {
-    radarActive = null;
-    appShowRadar(null);
+    radarClear();
     return;
   }
 
