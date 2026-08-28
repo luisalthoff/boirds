@@ -1,4 +1,4 @@
-var APP_VERSION = "0.2.1";
+var APP_VERSION = "0.2.2";
 var CACHE_NAME = "radar-br-app-" + APP_VERSION;
 
 var APP_FILES = [
