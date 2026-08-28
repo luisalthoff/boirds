@@ -35,18 +35,8 @@ button {
 }
 
 #statusPanel {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  gap: 12px;
   font-size: 13px;
   color: #cfcfcf;
-}
-
-#appVersion {
-  font-size: 12px;
-  color: #8f8f8f;
-  white-space: nowrap;
 }
 
 #speedPanel {
@@ -126,6 +116,18 @@ button {
 #btnUpdate {
   background: #333333;
   color: #ffffff;
+}
+
+#appFooter {
+  padding-top: 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #8f8f8f;
+  white-space: nowrap;
+}
+
+.footerSeparator {
+  margin: 0 6px;
 }
 
 .hidden {

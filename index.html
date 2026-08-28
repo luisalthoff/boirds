@@ -19,8 +19,6 @@
   <main id="app">
     <section id="statusPanel">
       <div id="gpsStatus">GPS: aguardando</div>
-      <div id="dbStatus">Base: não carregada</div>
-      <div id="appVersion">v--</div>
     </section>
 
     <section id="speedPanel">
@@ -58,6 +56,12 @@
       <button id="btnStart" type="button">INICIAR GPS</button>
       <button id="btnUpdate" type="button">ATUALIZAR RADARES</button>
     </section>
+
+    <footer id="appFooter">
+      <span id="dbStatus">Base: não carregada</span>
+      <span class="footerSeparator">•</span>
+      <span id="appVersion">v--</span>
+    </footer>
   </main>
 
   <script src="js/helper.js"></script>
