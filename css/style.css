@@ -35,11 +35,18 @@ button {
 }
 
 #statusPanel {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
   gap: 12px;
   font-size: 13px;
   color: #cfcfcf;
+}
+
+#appVersion {
+  font-size: 12px;
+  color: #8f8f8f;
+  white-space: nowrap;
 }
 
 #speedPanel {

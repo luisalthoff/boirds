@@ -1,11 +1,18 @@
 function updateRadars() {
   var button = document.getElementById("btnUpdate");
 
+  if (!window.fetch) {
+    appSetMessage("Este navegador não suporta atualização online.");
+    return;
+  }
+
   button.disabled = true;
   button.textContent = "ATUALIZANDO...";
   appSetMessage("Baixando base de radares...");
 
-  fetch("data/radars.json?ts=" + new Date().getTime(), { cache: "no-store" })
+  fetch("data/radars.json?ts=" + new Date().getTime(), {
+    cache: "no-store"
+  })
     .then(function(response) {
       if (!response.ok) {
         throw new Error("Falha no download");
@@ -27,7 +34,11 @@ function updateRadars() {
           return;
         }
 
-        localStorage.setItem("radarDatabaseUpdatedAt", data.updatedAt || new Date().toISOString());
+        localStorage.setItem(
+          "radarDatabaseUpdatedAt",
+          data.updatedAt || new Date().toISOString()
+        );
+
         radarSetList(data.radars);
         appUpdateDatabaseStatus(data.radars.length);
         appSetMessage("Base atualizada com sucesso.");

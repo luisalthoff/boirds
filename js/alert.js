@@ -28,12 +28,14 @@ function alertBeep() {
 
     oscillator.connect(gain);
     gain.connect(context.destination);
-
     oscillator.start();
 
     setTimeout(function() {
       oscillator.stop();
-      context.close();
+
+      if (context.close) {
+        context.close();
+      }
     }, 180);
   } catch (e) {
   }

@@ -1,4 +1,8 @@
+var APP_VERSION = "0.2.0";
+
 function appInit() {
+  appSetVersion(APP_VERSION);
+
   document.getElementById("btnStart").addEventListener("click", function() {
     if (gpsWatchId === null) {
       gpsStart();
@@ -27,13 +31,23 @@ function appInit() {
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
-      navigator.serviceWorker.register("sw.js");
+      navigator.serviceWorker.register("sw.js").then(function(registration) {
+        registration.update();
+      });
     });
   }
 }
 
 function appSetMessage(text) {
   document.getElementById("message").textContent = text;
+}
+
+function appSetVersion(version) {
+  var element = document.getElementById("appVersion");
+
+  if (element) {
+    element.textContent = "v" + version;
+  }
 }
 
 function appUpdateDatabaseStatus(count) {
@@ -89,9 +103,7 @@ function appShowRadar(result) {
     (result.radar.road || "") +
     (result.radar.state ? " • " + result.radar.state : "");
 
-  if (typeof result.radar.speed === "number") {
-    app.className = "warning";
-  }
+  app.className = "warning";
 }
 
 document.addEventListener("DOMContentLoaded", appInit);
