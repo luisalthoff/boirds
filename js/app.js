@@ -1,7 +1,5 @@
-var APP_VERSION = "0.2.2";
-
 function appInit() {
-  appSetVersion(APP_VERSION);
+  appLoadVersion();
 
   document.getElementById("btnStart").addEventListener("click", function() {
     if (gpsWatchId === null && !gpsPermissionRequesting) {
@@ -47,12 +45,36 @@ function appSetMessage(text) {
   document.getElementById("message").textContent = text;
 }
 
-function appSetVersion(version) {
-  var element = document.getElementById("appVersion");
+function appLoadVersion() {
+  fetch("version.json", { cache: "no-store" })
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("Version unavailable");
+      }
 
-  if (element) {
-    element.textContent = "v" + version;
+      return response.json();
+    })
+    .then(function(data) {
+      appSetVersion(data.version, data.build);
+    })
+    .catch(function() {
+      appSetVersion("--", "");
+    });
+}
+
+function appSetVersion(version, build) {
+  var element = document.getElementById("appVersion");
+  var text = "v" + version;
+
+  if (!element) {
+    return;
   }
+
+  if (build) {
+    text += " • " + build;
+  }
+
+  element.textContent = text;
 }
 
 function appUpdateDatabaseStatus(count) {
@@ -66,12 +88,6 @@ function appUpdateDatabaseStatus(count) {
   document.getElementById("dbStatus").textContent = text;
 }
 
-function appGpsRequesting() {
-  document.getElementById("btnStart").textContent = "SOLICITANDO GPS...";
-  document.getElementById("btnStart").disabled = true;
-  document.getElementById("gpsStatus").textContent = "GPS: solicitando permissão";
-  appSetMessage("Autorize o acesso à localização no iPhone.");
-}
 
 function appShowGpsPermissionHelp() {
   document.getElementById("gpsPermissionPanel").className = "";
