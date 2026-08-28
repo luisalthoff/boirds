@@ -4,6 +4,18 @@
   "count": 166,
   "radars": [
     {
+      "id": "SC0000",
+      "road": "3500",
+      "km": 0,
+      "city": "Balneário Camboriú",
+      "direction": "Crescente",
+      "type": "Controlador",
+      "lane": "Principal",
+      "speed": 100,
+      "lat": -26.999165,
+      "lon": -48.622936
+    },
+    {
       "id": "SC0001",
       "road": "BR-101",
       "km": 13.288,
