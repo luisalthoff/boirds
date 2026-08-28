@@ -11,7 +11,7 @@
   <title>Radar BR</title>
 
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="img/icon-192.png">
+  <link rel="apple-touch-icon" href="img/tb-192.png">
   <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -20,7 +20,7 @@
     <section id="statusPanel">
       <div id="gpsStatus">GPS: aguardando</div>
       <div id="dbStatus">Base: não carregada</div>
-      <div id="appVersion">v0.2.0</div>
+      <div id="appVersion">v0.2.1</div>
     </section>
 
     <section id="speedPanel">
@@ -34,6 +34,20 @@
       <div id="radarLimitUnit">km/h</div>
       <div id="radarDistance">-- m</div>
       <div id="radarRoad">--</div>
+    </section>
+
+
+    <section id="gpsPermissionPanel" class="hidden">
+      <div class="gpsPermissionTitle">LOCALIZAÇÃO BLOQUEADA</div>
+      <div class="gpsPermissionText">
+        No iPhone, confirme:
+        <br>1. Ajustes → Privacidade e Segurança → Serviços de Localização: ATIVADO.
+        <br>2. Ajustes → Apps → Safari → Localização: PERGUNTAR ou PERMITIR.
+        <br>3. No Safari, abra este site → menu da página → Ajustes do Site → Localização: PERMITIR.
+        <br>4. Se disponível, mantenha Localização Precisa ativada.
+        <br><br>Depois reabra o Radar BR e tente novamente.
+      </div>
+      <button id="btnGpsRetry" type="button">TENTAR GPS NOVAMENTE</button>
     </section>
 
     <section id="messagePanel">

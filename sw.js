@@ -1,4 +1,4 @@
-var APP_VERSION = "0.2.0";
+var APP_VERSION = "0.2.1";
 var CACHE_NAME = "radar-br-app-" + APP_VERSION;
 
 var APP_FILES = [
@@ -14,8 +14,8 @@ var APP_FILES = [
   "js/gps.js",
   "js/update.js",
   "js/app.js",
-  "img/icon-192.png",
-  "img/icon-512.png"
+  "img/tb-192.png",
+  "img/tb-512.png"
 ];
 
 self.addEventListener("install", function(event) {

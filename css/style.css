@@ -135,3 +135,31 @@ button {
 .warning #radarPanel {
   background: #5b1a1a;
 }
+
+
+#gpsPermissionPanel {
+  margin-bottom: 12px;
+  padding: 14px;
+  border: 2px solid #ffffff;
+  border-radius: 14px;
+  background: #242424;
+}
+
+.gpsPermissionTitle {
+  margin-bottom: 8px;
+  font-size: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.gpsPermissionText {
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+#btnGpsRetry {
+  width: 100%;
+  margin-top: 12px;
+  background: #ffffff;
+  color: #111111;
+}

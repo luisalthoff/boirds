@@ -1,4 +1,11 @@
 var gpsWatchId = null;
+var gpsPermissionRequesting = false;
+
+var GPS_OPTIONS = {
+  enableHighAccuracy: true,
+  maximumAge: 1000,
+  timeout: 15000
+};
 
 function gpsStart() {
   if (!navigator.geolocation) {
@@ -6,26 +13,53 @@ function gpsStart() {
     return;
   }
 
-  if (gpsWatchId !== null) {
+  if (gpsWatchId !== null || gpsPermissionRequesting) {
     return;
   }
 
-  appSetMessage("Solicitando acesso ao GPS...");
+  gpsPermissionRequesting = true;
+  appGpsRequesting();
 
-  gpsWatchId = navigator.geolocation.watchPosition(
-    gpsPositionUpdate,
+  /*
+    On iOS, make the first location request directly from the user's tap.
+    getCurrentPosition() triggers the permission prompt. Only after permission
+    succeeds do we start the continuous watch.
+  */
+  navigator.geolocation.getCurrentPosition(
+    gpsPermissionGranted,
     gpsError,
-    {
-      enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 15000
-    }
+    GPS_OPTIONS
   );
+}
 
-  appGpsStarted();
+function gpsPermissionGranted(position) {
+  gpsPermissionRequesting = false;
+  appHideGpsPermissionHelp();
+
+  /*
+    Use the first position immediately so the screen does not wait for the
+    first watchPosition() callback.
+  */
+  gpsPositionUpdate(position);
+
+  try {
+    gpsWatchId = navigator.geolocation.watchPosition(
+      gpsPositionUpdate,
+      gpsError,
+      GPS_OPTIONS
+    );
+
+    appGpsStarted();
+  } catch (error) {
+    gpsWatchId = null;
+    appGpsStopped();
+    appSetMessage("Não foi possível iniciar o GPS contínuo.");
+  }
 }
 
 function gpsStop() {
+  gpsPermissionRequesting = false;
+
   if (gpsWatchId !== null) {
     navigator.geolocation.clearWatch(gpsWatchId);
     gpsWatchId = null;
@@ -58,8 +92,18 @@ function gpsPositionUpdate(position) {
 function gpsError(error) {
   var message = "Erro no GPS.";
 
+  gpsPermissionRequesting = false;
+
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+
+  appGpsStopped();
+
   if (error && error.code === 1) {
-    message = "Permissão de localização negada.";
+    message = "Permissão de localização negada pelo iPhone.";
+    appShowGpsPermissionHelp();
   } else if (error && error.code === 2) {
     message = "Localização indisponível.";
   } else if (error && error.code === 3) {

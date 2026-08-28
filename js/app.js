@@ -1,14 +1,19 @@
-var APP_VERSION = "0.2.0";
+var APP_VERSION = "0.2.1";
 
 function appInit() {
   appSetVersion(APP_VERSION);
 
   document.getElementById("btnStart").addEventListener("click", function() {
-    if (gpsWatchId === null) {
+    if (gpsWatchId === null && !gpsPermissionRequesting) {
       gpsStart();
-    } else {
+    } else if (gpsWatchId !== null) {
       gpsStop();
     }
+  });
+
+  document.getElementById("btnGpsRetry").addEventListener("click", function() {
+    appHideGpsPermissionHelp();
+    gpsStart();
   });
 
   document.getElementById("btnUpdate").addEventListener("click", updateRadars);
@@ -61,12 +66,29 @@ function appUpdateDatabaseStatus(count) {
   document.getElementById("dbStatus").textContent = text;
 }
 
+function appGpsRequesting() {
+  document.getElementById("btnStart").textContent = "SOLICITANDO GPS...";
+  document.getElementById("btnStart").disabled = true;
+  document.getElementById("gpsStatus").textContent = "GPS: solicitando permissão";
+  appSetMessage("Autorize o acesso à localização no iPhone.");
+}
+
+function appShowGpsPermissionHelp() {
+  document.getElementById("gpsPermissionPanel").className = "";
+}
+
+function appHideGpsPermissionHelp() {
+  document.getElementById("gpsPermissionPanel").className = "hidden";
+}
+
 function appGpsStarted() {
+  document.getElementById("btnStart").disabled = false;
   document.getElementById("btnStart").textContent = "PARAR GPS";
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
 }
 
 function appGpsStopped() {
+  document.getElementById("btnStart").disabled = false;
   document.getElementById("btnStart").textContent = "INICIAR GPS";
   document.getElementById("gpsStatus").textContent = "GPS: parado";
   document.getElementById("speedValue").textContent = "--";
