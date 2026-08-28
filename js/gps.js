@@ -18,13 +18,7 @@ function gpsStart() {
   }
 
   gpsPermissionRequesting = true;
-  appGpsRequesting();
 
-  /*
-    On iOS, make the first location request directly from the user's tap.
-    getCurrentPosition() triggers the permission prompt. Only after permission
-    succeeds do we start the continuous watch.
-  */
   navigator.geolocation.getCurrentPosition(
     gpsPermissionGranted,
     gpsError,
@@ -35,11 +29,6 @@ function gpsStart() {
 function gpsPermissionGranted(position) {
   gpsPermissionRequesting = false;
   appHideGpsPermissionHelp();
-
-  /*
-    Use the first position immediately so the screen does not wait for the
-    first watchPosition() callback.
-  */
   gpsPositionUpdate(position);
 
   try {
