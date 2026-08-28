@@ -139,7 +139,12 @@ function appShowRadar(result) {
     Math.max(0, Math.round(result.distance)) + " m";
   document.getElementById("radarRoad").textContent =
     (result.radar.road || "") +
-    (result.radar.state ? " • " + result.radar.state : "");
+    (typeof result.radar.km === "number" ? " • km " + result.radar.km : "");
+
+  document.getElementById("radarInfo").textContent =
+    (result.radar.city || "") +
+    (result.radar.direction ? " • " + result.radar.direction : "") +
+    (result.radar.lane ? " • " + result.radar.lane : "");
 
   app.className = "warning";
 }

@@ -93,6 +93,13 @@ button {
 #radarRoad {
   margin-top: 8px;
   font-size: 18px;
+  font-weight: 700;
+}
+
+#radarInfo {
+  margin-top: 5px;
+  font-size: 14px;
+  color: #d8d8d8;
 }
 
 #messagePanel {
