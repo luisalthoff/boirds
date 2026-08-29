@@ -1,49 +1,88 @@
-var alertLastRadarId = null;
-var alertLastStage = null;
+var alertRadarId = null;
+var alertVoiceDone = false;
+var alertBeepTimer = null;
+var alertAudioContext = null;
 
-function alertReset() {
-  alertLastRadarId = null;
-  alertLastStage = null;
-}
+var ALERT_VOICE_DISTANCE = 500;
+var ALERT_BEEP_DISTANCE = 200;
+var ALERT_BEEP_INTERVAL = 1000;
+var ALERT_BEEP_FREQUENCY = 700;
+var ALERT_BEEP_DURATION = 150;
 
-function alertBeep() {
-  var AudioContextClass;
-  var context;
-  var oscillator;
-  var gain;
+var ALERT_TYPE_NAMES = {
+  1: "Radar fixo",
+  2: "Semáforo com radar",
+  4: "Radar de trecho",
+  5: "Radar móvel"
+};
 
-  AudioContextClass = window.AudioContext || window.webkitAudioContext;
+function alertPrepareAudio() {
+  var AudioContextClass = window.AudioContext || window.webkitAudioContext;
 
   if (!AudioContextClass) {
     return;
   }
 
   try {
-    context = new AudioContextClass();
-    oscillator = context.createOscillator();
-    gain = context.createGain();
+    if (!alertAudioContext) {
+      alertAudioContext = new AudioContextClass();
+    }
 
-    oscillator.frequency.value = 880;
-    gain.gain.value = 0.08;
-
-    oscillator.connect(gain);
-    gain.connect(context.destination);
-    oscillator.start();
-
-    setTimeout(function() {
-      oscillator.stop();
-
-      if (context.close) {
-        context.close();
-      }
-    }, 180);
+    if (alertAudioContext.state === "suspended" && alertAudioContext.resume) {
+      alertAudioContext.resume();
+    }
   } catch (e) {
   }
 }
 
-function alertVibrate() {
-  if (navigator.vibrate) {
-    navigator.vibrate([100, 80, 100]);
+function alertReset() {
+  alertStopBeeping();
+  alertRadarId = null;
+  alertVoiceDone = false;
+}
+
+function alertBeep() {
+  var oscillator;
+  var gain;
+  var now;
+
+  alertPrepareAudio();
+
+  if (!alertAudioContext) {
+    return;
+  }
+
+  try {
+    now = alertAudioContext.currentTime;
+    oscillator = alertAudioContext.createOscillator();
+    gain = alertAudioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(ALERT_BEEP_FREQUENCY, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + ALERT_BEEP_DURATION / 1000);
+
+    oscillator.connect(gain);
+    gain.connect(alertAudioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + ALERT_BEEP_DURATION / 1000);
+  } catch (e) {
+  }
+}
+
+function alertStartBeeping() {
+  if (alertBeepTimer !== null) {
+    return;
+  }
+
+  alertBeep();
+  alertBeepTimer = setInterval(alertBeep, ALERT_BEEP_INTERVAL);
+}
+
+function alertStopBeeping() {
+  if (alertBeepTimer !== null) {
+    clearInterval(alertBeepTimer);
+    alertBeepTimer = null;
   }
 }
 
@@ -65,33 +104,20 @@ function alertSpeak(text) {
 }
 
 function alertRadar(radar, distance) {
-  var stage = null;
+  var typeName;
 
-  if (distance <= 200) {
-    stage = 200;
-  } else if (distance <= 500) {
-    stage = 500;
-  } else if (distance <= 1000) {
-    stage = 1000;
+  if (alertRadarId !== radar.id) {
+    alertReset();
+    alertRadarId = radar.id;
   }
 
-  if (stage === null) {
-    return;
+  if (distance <= ALERT_VOICE_DISTANCE && !alertVoiceDone) {
+    typeName = ALERT_TYPE_NAMES[radar.type] || "Radar";
+    alertSpeak(typeName + ". Limite " + radar.speed + ".");
+    alertVoiceDone = true;
   }
 
-  if (alertLastRadarId === radar.id && alertLastStage === stage) {
-    return;
-  }
-
-  alertLastRadarId = radar.id;
-  alertLastStage = stage;
-
-  alertBeep();
-  alertVibrate();
-
-  if (stage === 1000) {
-    alertSpeak("Radar. Limite " + radar.speed + ". Um quilômetro.");
-  } else {
-    alertSpeak("Radar. Limite " + radar.speed + ". " + stage + " metros.");
+  if (distance <= ALERT_BEEP_DISTANCE) {
+    alertStartBeeping();
   }
 }

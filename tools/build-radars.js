@@ -2,109 +2,89 @@
 
 const fs = require("fs");
 
-const INPUT = process.argv[2] || "radares.json";
+const INPUT = process.argv[2] || "maparadar-sc-pr-sp-raw.json";
 const OUTPUT = process.argv[3] || "../data/radars.json";
 
-function number(value) {
-  if (value === null || value === undefined || value === "") return null;
-  return Number(String(value).replace(",", "."));
-}
+const TYPE_NAMES = {
+  1: "Radar Fixo",
+  2: "Semáforo com Radar",
+  4: "Radar de Trecho",
+  5: "Radar Móvel"
+};
 
-function speed(radar) {
-  var value = Number(radar.velocidade_leve);
+// Local development radar kept from the previous Radar BR database.
+const TEST_RADAR = {
+  id: "TEST-SC0000",
+  type: 1,
+  speed: 100,
+  lat: -26.99926597106059,
+  lon: -48.622971068916385,
+  direction: null,
+  dual: false,
+  all: true,
+  road: "3500",
+  km: 0
+};
 
-  // ANTT source correction confirmed against the posted 100 km/h road sign:
-  // BR-101, Joinville, km 40.9, sentido Crescente.
-  if (
-    radar.uf === "SC" &&
-    radar.rodovia === "BR-101" &&
-    radar.municipio === "Joinville" &&
-    radar.km_m === "40,9" &&
-    radar.sentido === "Crescente" &&
-    value === 10
-  ) {
-    return 100;
+function compactPoi(poi) {
+  const radar = {
+    id: Number(poi.id),
+    type: Number(poi.type),
+    speed: Number(poi.speed),
+    lat: Number(poi.latitude),
+    lon: Number(poi.longitude),
+    direction: poi.allDirections ? null : Number(poi.direction),
+    dual: Boolean(poi.isDualDirection),
+    all: Boolean(poi.allDirections)
+  };
+
+  if (poi.highway) {
+    radar.road = poi.highway;
   }
 
-  return value;
+  if (poi.kilometer !== null && poi.kilometer !== undefined) {
+    radar.km = poi.kilometer;
+  }
+
+  return radar;
 }
 
-function compareRadar(a, b) {
-  var road = a.road.localeCompare(b.road, "pt-BR");
-  if (road !== 0) return road;
-  if (a.km !== b.km) return a.km - b.km;
-  return a.direction.localeCompare(b.direction, "pt-BR");
-}
+const source = JSON.parse(fs.readFileSync(INPUT, "utf8"));
+const pois = Array.isArray(source.pois) ? source.pois : [];
 
-var source = JSON.parse(fs.readFileSync(INPUT, "utf8"));
-var records = Array.isArray(source.radar) ? source.radar : [];
-
-var radars = records
-  .filter(function(radar) {
-    return radar.uf === "SC";
+const radars = pois
+  .filter(function(poi) {
+    return TYPE_NAMES[Number(poi.type)] &&
+      !poi.isDeleted &&
+      Number.isFinite(Number(poi.latitude)) &&
+      Number.isFinite(Number(poi.longitude)) &&
+      Number.isFinite(Number(poi.speed));
   })
-  .map(function(radar) {
-    return {
-      road: radar.rodovia,
-      km: number(radar.km_m),
-      city: radar.municipio,
-      direction: radar.sentido,
-      type: radar.tipo_de_radar,
-      lane: radar.tipo_de_pista,
-      speed: speed(radar),
-      lat: number(radar.latitude),
-      lon: number(radar.longitude)
-    };
-  })
-  .sort(compareRadar)
-  .map(function(radar, index) {
-    radar.id = "SC" + String(index + 1).padStart(4, "0");
-    return {
-      id: radar.id,
-      road: radar.road,
-      km: radar.km,
-      city: radar.city,
-      direction: radar.direction,
-      type: radar.type,
-      lane: radar.lane,
-      speed: radar.speed,
-      lat: radar.lat,
-      lon: radar.lon
-    };
-  });
+  .map(compactPoi);
 
-var output = {
-  source: "ANTT",
-  state: "SC",
+radars.push(TEST_RADAR);
+
+const output = {
+  source: "MapaRadar",
+  states: ["SC", "PR", "SP"],
+  types: TYPE_NAMES,
   count: radars.length,
   radars: radars
 };
 
-fs.writeFileSync(OUTPUT, JSON.stringify(output, null, 2) + "\n");
+fs.writeFileSync(OUTPUT, JSON.stringify(output) + "\n");
 
-var speeds = {};
-var roads = {};
-
+const counts = {};
 radars.forEach(function(radar) {
-  speeds[radar.speed] = (speeds[radar.speed] || 0) + 1;
-  roads[radar.road] = (roads[radar.road] || 0) + 1;
+  const key = radar.id === TEST_RADAR.id ? "test" : String(radar.type);
+  counts[key] = (counts[key] || 0) + 1;
 });
 
-console.log("");
-console.log("Radar BR - Santa Catarina");
-console.log("-------------------------");
-console.log("ANTT total : " + records.length);
-console.log("SC total   : " + radars.length);
-console.log("");
-console.log("Por rodovia:");
-Object.keys(roads).sort().forEach(function(road) {
-  console.log("  " + road + ": " + roads[road]);
+console.log("Radar BR - MapaRadar compact database");
+console.log("-------------------------------------");
+console.log("Source POIs : " + pois.length);
+console.log("Output      : " + radars.length + " (includes 1 local test radar)");
+Object.keys(TYPE_NAMES).forEach(function(type) {
+  console.log("Type " + type + "      : " + (counts[type] || 0) + " - " + TYPE_NAMES[type]);
 });
-console.log("");
-console.log("Por velocidade:");
-Object.keys(speeds).sort(function(a, b) { return Number(a) - Number(b); })
-  .forEach(function(value) {
-    console.log("  " + value + " km/h: " + speeds[value]);
-  });
-console.log("");
-console.log("Gerado: " + OUTPUT);
+console.log("Generated   : " + OUTPUT);

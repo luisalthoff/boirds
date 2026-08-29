@@ -2,7 +2,7 @@ var radarList = [];
 var radarActive = null;
 var radarPreviousDistance = {};
 
-var RADAR_MAX_DISTANCE = 1500;
+var RADAR_MAX_DISTANCE = 600;
 var RADAR_MAX_DIRECTION_ERROR = 65;
 var RADAR_BEHIND_ANGLE = 90;
 
@@ -10,6 +10,7 @@ function radarSetList(list) {
   radarList = list || [];
   radarActive = null;
   radarPreviousDistance = {};
+  alertReset();
 }
 
 function radarIsApproaching(radar, distance) {
@@ -24,6 +25,25 @@ function radarIsApproaching(radar, distance) {
   return distance <= previous + 3;
 }
 
+function radarSourceDirectionMatches(heading, radar) {
+  var opposite;
+
+  if (radar.all || typeof radar.direction !== "number" || isNaN(radar.direction)) {
+    return true;
+  }
+
+  if (helperAngleDifference(heading, radar.direction) <= RADAR_MAX_DIRECTION_ERROR) {
+    return true;
+  }
+
+  if (radar.dual) {
+    opposite = helperNormalizeAngle(radar.direction + 180);
+    return helperAngleDifference(heading, opposite) <= RADAR_MAX_DIRECTION_ERROR;
+  }
+
+  return false;
+}
+
 function radarMatchesDirection(position, radar, bearingToRadar) {
   var heading = position.heading;
 
@@ -31,17 +51,12 @@ function radarMatchesDirection(position, radar, bearingToRadar) {
     return true;
   }
 
+  // The radar must still be in front of the vehicle.
   if (helperAngleDifference(heading, bearingToRadar) > RADAR_MAX_DIRECTION_ERROR) {
     return false;
   }
 
-  if (typeof radar.heading === "number" &&
-      !isNaN(radar.heading) &&
-      helperAngleDifference(heading, radar.heading) > RADAR_MAX_DIRECTION_ERROR) {
-    return false;
-  }
-
-  return true;
+  return radarSourceDirectionMatches(heading, radar);
 }
 
 function radarActiveIsBehind(position) {
@@ -123,7 +138,6 @@ function radarCheck(position) {
 
   if (radarActiveIsBehind(position)) {
     radarClear();
-    return;
   }
 
   result = radarFindNearest(position);

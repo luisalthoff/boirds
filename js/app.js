@@ -142,11 +142,21 @@ function appShowRadar(result) {
     (typeof result.radar.km === "number" ? " • km " + result.radar.km : "");
 
   document.getElementById("radarInfo").textContent =
-    (result.radar.city || "") +
-    (result.radar.direction ? " • " + result.radar.direction : "") +
-    (result.radar.lane ? " • " + result.radar.lane : "");
+    appRadarTypeName(result.radar.type);
 
   app.className = "warning";
+}
+
+
+function appRadarTypeName(type) {
+  var names = {
+    1: "Radar Fixo",
+    2: "Semáforo com Radar",
+    4: "Radar de Trecho",
+    5: "Radar Móvel"
+  };
+
+  return names[type] || "Radar";
 }
 
 document.addEventListener("DOMContentLoaded", appInit);

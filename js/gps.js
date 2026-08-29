@@ -21,6 +21,7 @@ function gpsStart() {
     return;
   }
 
+  alertPrepareAudio();
   gpsPreviousPosition = null;
   gpsPermissionRequesting = true;
 
@@ -60,6 +61,7 @@ function gpsStop() {
   }
 
   gpsPreviousPosition = null;
+  radarClear();
   appGpsStopped();
 }
 
@@ -73,6 +75,15 @@ function gpsPositionUpdate(position) {
   var calculatedSpeed;
   var normalized;
 
+  // Prefer the native GPS values. Coordinate-derived values are fallbacks only.
+  if (typeof coords.speed === "number" && coords.speed >= 0) {
+    speedKmh = coords.speed * 3.6;
+  }
+
+  if (typeof coords.heading === "number" && coords.heading >= 0) {
+    heading = coords.heading;
+  }
+
   if (gpsPreviousPosition) {
     distanceMoved = helperDistanceMeters(
       gpsPreviousPosition.latitude,
@@ -83,7 +94,7 @@ function gpsPositionUpdate(position) {
 
     elapsedSeconds = (timestamp - gpsPreviousPosition.timestamp) / 1000;
 
-    if (elapsedSeconds > 0 && elapsedSeconds <= GPS_MAX_SAMPLE_AGE) {
+    if (speedKmh === null && elapsedSeconds > 0 && elapsedSeconds <= GPS_MAX_SAMPLE_AGE) {
       calculatedSpeed = (distanceMoved / elapsedSeconds) * 3.6;
 
       if (calculatedSpeed >= 0 && calculatedSpeed < 250) {
@@ -91,7 +102,7 @@ function gpsPositionUpdate(position) {
       }
     }
 
-    if (distanceMoved >= GPS_MIN_MOVEMENT_FOR_HEADING) {
+    if (heading === null && distanceMoved >= GPS_MIN_MOVEMENT_FOR_HEADING) {
       heading = helperBearingDegrees(
         gpsPreviousPosition.latitude,
         gpsPreviousPosition.longitude,
@@ -99,14 +110,6 @@ function gpsPositionUpdate(position) {
         coords.longitude
       );
     }
-  }
-
-  if (speedKmh === null && typeof coords.speed === "number" && coords.speed >= 0) {
-    speedKmh = coords.speed * 3.6;
-  }
-
-  if (heading === null && typeof coords.heading === "number" && coords.heading >= 0) {
-    heading = coords.heading;
   }
 
   normalized = {
@@ -138,6 +141,7 @@ function gpsError(error) {
   }
 
   gpsPreviousPosition = null;
+  radarClear();
   appGpsStopped();
 
   if (error && error.code === 1) {
