@@ -1,4 +1,4 @@
-var CACHE_NAME = "radar-br-app";
+var CACHE_NAME = "radar-br-app-v0.4.1-audio-colors";
 var CACHE_PREFIX = "radar-br-app";
 
 var APP_FILES = [
@@ -15,7 +15,18 @@ var APP_FILES = [
   "js/update.js",
   "js/app.js",
   "img/tb-192.png",
-  "img/tb-512.png"
+  "img/tb-512.png",
+  "img/sT.svg",
+  "img/s+.svg",
+  "img/s-.svg",
+  "audio/30.mp3",
+  "audio/40.mp3",
+  "audio/60.mp3",
+  "audio/80.mp3",
+  "audio/90.mp3",
+  "audio/100.mp3",
+  "audio/110.mp3",
+  "audio/120.mp3"
 ];
 
 self.addEventListener("install", function(event) {

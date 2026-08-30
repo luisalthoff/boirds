@@ -1,28 +1,21 @@
 var radarList = [];
 var radarActive = null;
-var radarPreviousDistance = {};
+var radarPassed = {};
+var radarBehindCount = 0;
 
-var RADAR_MAX_DISTANCE = 600;
+var RADAR_TRACK_DISTANCE = 600;
+var RADAR_WARNING_DISTANCE = 500;
+var RADAR_RELEASE_DISTANCE = 700;
 var RADAR_MAX_DIRECTION_ERROR = 65;
 var RADAR_BEHIND_ANGLE = 90;
+var RADAR_BEHIND_CONFIRMATIONS = 2;
 
 function radarSetList(list) {
   radarList = list || [];
   radarActive = null;
-  radarPreviousDistance = {};
+  radarPassed = {};
+  radarBehindCount = 0;
   alertReset();
-}
-
-function radarIsApproaching(radar, distance) {
-  var previous = radarPreviousDistance[radar.id];
-
-  radarPreviousDistance[radar.id] = distance;
-
-  if (typeof previous !== "number") {
-    return true;
-  }
-
-  return distance <= previous + 3;
 }
 
 function radarSourceDirectionMatches(heading, radar) {
@@ -51,7 +44,6 @@ function radarMatchesDirection(position, radar, bearingToRadar) {
     return true;
   }
 
-  // The radar must still be in front of the vehicle.
   if (helperAngleDifference(heading, bearingToRadar) > RADAR_MAX_DIRECTION_ERROR) {
     return false;
   }
@@ -59,36 +51,47 @@ function radarMatchesDirection(position, radar, bearingToRadar) {
   return radarSourceDirectionMatches(heading, radar);
 }
 
-function radarActiveIsBehind(position) {
-  var bearingToRadar;
+function radarResultFor(position, radar) {
+  var distance = helperDistanceMeters(
+    position.latitude,
+    position.longitude,
+    radar.lat,
+    radar.lon
+  );
 
-  if (!radarActive ||
-      typeof position.heading !== "number" ||
+  return {
+    radar: radar,
+    distance: distance,
+    bearing: helperBearingDegrees(
+      position.latitude,
+      position.longitude,
+      radar.lat,
+      radar.lon
+    )
+  };
+}
+
+function radarIsBehind(position, result) {
+  if (typeof position.heading !== "number" ||
       isNaN(position.heading) ||
       position.heading < 0) {
     return false;
   }
 
-  bearingToRadar = helperBearingDegrees(
-    position.latitude,
-    position.longitude,
-    radarActive.lat,
-    radarActive.lon
-  );
-
-  return helperAngleDifference(position.heading, bearingToRadar) > RADAR_BEHIND_ANGLE;
+  return helperAngleDifference(position.heading, result.bearing) > RADAR_BEHIND_ANGLE;
 }
 
-function radarFindNearest(position) {
-  var best = null;
-  var i;
+function radarUpdatePassedState(position) {
+  var id;
   var radar;
   var distance;
-  var bearing;
 
-  for (i = 0; i < radarList.length; i++) {
-    radar = radarList[i];
+  for (id in radarPassed) {
+    if (!Object.prototype.hasOwnProperty.call(radarPassed, id)) {
+      continue;
+    }
 
+    radar = radarPassed[id];
     distance = helperDistanceMeters(
       position.latitude,
       position.longitude,
@@ -96,58 +99,112 @@ function radarFindNearest(position) {
       radar.lon
     );
 
-    if (distance > RADAR_MAX_DISTANCE) {
+    if (distance > RADAR_RELEASE_DISTANCE) {
+      delete radarPassed[id];
+    }
+  }
+}
+
+function radarFindNearest(position) {
+  var best = null;
+  var i;
+  var radar;
+  var result;
+
+  for (i = 0; i < radarList.length; i++) {
+    radar = radarList[i];
+
+    if (radarPassed[radar.id]) {
       continue;
     }
 
-    bearing = helperBearingDegrees(
-      position.latitude,
-      position.longitude,
-      radar.lat,
-      radar.lon
-    );
+    result = radarResultFor(position, radar);
 
-    if (!radarMatchesDirection(position, radar, bearing)) {
+    if (result.distance > RADAR_TRACK_DISTANCE) {
       continue;
     }
 
-    if (!radarIsApproaching(radar, distance)) {
+    if (!radarMatchesDirection(position, radar, result.bearing)) {
       continue;
     }
 
-    if (!best || distance < best.distance) {
-      best = {
-        radar: radar,
-        distance: distance,
-        bearing: bearing
-      };
+    if (!best || result.distance < best.distance) {
+      best = result;
     }
   }
 
   return best;
 }
 
-function radarClear() {
+function radarClear(markPassed) {
+  if (markPassed && radarActive) {
+    radarPassed[radarActive.id] = radarActive;
+  }
+
   radarActive = null;
+  radarBehindCount = 0;
   alertReset();
   appShowRadar(null);
+}
+
+function radarHandleActive(position) {
+  var result;
+
+  if (!radarActive) {
+    return false;
+  }
+
+  result = radarResultFor(position, radarActive);
+
+  if (radarIsBehind(position, result)) {
+    radarBehindCount++;
+
+    if (radarBehindCount >= RADAR_BEHIND_CONFIRMATIONS) {
+      radarClear(true);
+      return false;
+    }
+  } else {
+    radarBehindCount = 0;
+  }
+
+  if (result.distance > RADAR_RELEASE_DISTANCE) {
+    radarClear(false);
+    return false;
+  }
+
+  if (result.distance <= RADAR_WARNING_DISTANCE) {
+    appShowRadar(result);
+    alertRadar(result.radar, result.distance);
+  } else {
+    appShowRadar(null);
+  }
+
+  return true;
 }
 
 function radarCheck(position) {
   var result;
 
-  if (radarActiveIsBehind(position)) {
-    radarClear();
+  radarUpdatePassedState(position);
+
+  if (radarHandleActive(position)) {
+    return;
   }
 
   result = radarFindNearest(position);
 
   if (!result) {
-    radarClear();
+    appShowRadar(null);
     return;
   }
 
   radarActive = result.radar;
-  appShowRadar(result);
-  alertRadar(result.radar, result.distance);
+  radarBehindCount = 0;
+
+  if (result.distance <= RADAR_WARNING_DISTANCE) {
+    appShowRadar(result);
+    alertRadar(result.radar, result.distance);
+  } else {
+    appShowRadar(null);
+  }
 }

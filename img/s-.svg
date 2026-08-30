@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="25.350359mm"
+   height="18.219051mm"
+   viewBox="0 0 25.350359 18.219051"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="s-.svg"
+   inkscape:version="1.4.3 (0d15f750, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.8936208"
+     inkscape:cx="42.51115"
+     inkscape:cy="75.252657"
+     inkscape:window-width="1024"
+     inkscape:window-height="1186"
+     inkscape:window-x="0"
+     inkscape:window-y="30"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="Regular-S" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-91.810424,-138.90625)">
+    <g
+       id="Regular-S"
+       transform="matrix(0.26458333,0,0,0.26458333,89.29275,157.33046)"
+       style="fill:#cccccc;fill-opacity:1;stroke:none">
+      <path
+         class="monochrome-0 multicolor-0:tintColor hierarchical-0:secondary SFSymbolsPreviewWireframe"
+         d="m 71.676773,-31.773089 h 28.414357 c 2.46847,0 4.16268,-1.26341 4.16268,-3.595968 0,-2.381122 -1.59706,-3.693099 -4.16268,-3.693099 H 71.676773 c -2.565522,0 -4.211267,1.311977 -4.211267,3.693099 0,2.332558 1.7426,3.595968 4.211267,3.595968 z"
+         id="path33"
+         style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.496638" />
+      <path
+         class="monochrome-1 multicolor-1:tintColor hierarchical-1:primary SFSymbolsPreviewWireframe"
+         d="m 18.139855,-19.430282 h 10.600833 c 0.290466,0 0.580933,0.09723 0.774544,0.291595 l 16.845265,15.161312 c 2.033067,1.7979737 3.582055,2.6240719 5.566644,2.6240719 2.6139,0 4.695345,-1.943761 4.695345,-4.6650145 V -64.476757 c 0,-2.672717 -2.081445,-4.908043 -4.792101,-4.908043 -1.984688,0 -3.24321,0.874684 -5.469888,2.915647 l -16.845265,14.869727 c -0.193611,0.194363 -0.484078,0.291595 -0.774544,0.291595 H 18.139855 c -5.615122,0 -8.374235,2.86708 -8.374235,8.892637 v 14.140841 c 0,5.97709 2.807591,8.844071 8.374235,8.844071 z m 0.290467,-6.317151 c -1.258622,0 -1.936311,-0.631755 -1.936311,-1.943731 v -15.355685 c 0,-1.26351 0.677689,-1.943732 1.936311,-1.943732 h 12.198199 c 0.919777,0 1.645844,-0.145797 2.517144,-0.971915 l 15.731976,-14.286638 c 0.145134,-0.145797 0.338745,-0.242929 0.532456,-0.242929 0.241988,0 0.4356,0.194363 0.4356,0.485958 v 49.225631 c 0,0.34016 -0.193612,0.534484 -0.4356,0.534484 -0.193711,0 -0.387322,-0.09719 -0.532456,-0.291555 L 33.145665,-24.775518 c -0.8713,-0.777552 -1.597367,-0.971915 -2.517144,-0.971915 z"
+         id="path34"
+         style="opacity:1;fill:#cccccc;fill-opacity:1;stroke:none;stroke-width:0.496638" />
+    </g>
+  </g>
+</svg>

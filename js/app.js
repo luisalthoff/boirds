@@ -1,7 +1,10 @@
 function appInit() {
   appLoadVersion();
+  alertInit();
 
   document.getElementById("btnStart").addEventListener("click", function() {
+    alertPrepareAudio();
+
     if (gpsWatchId === null && !gpsPermissionRequesting) {
       gpsStart();
     } else if (gpsWatchId !== null) {
@@ -15,6 +18,10 @@ function appInit() {
   });
 
   document.getElementById("btnUpdate").addEventListener("click", updateRadars);
+
+  document.getElementById("btnSoundTest").addEventListener("click", alertTestSound);
+  document.getElementById("btnVolumeUp").addEventListener("click", alertVolumeUp);
+  document.getElementById("btnVolumeDown").addEventListener("click", alertVolumeDown);
 
   databaseLoadRadars(function(error, list) {
     if (error) {
@@ -126,14 +133,27 @@ function appGpsUpdate(position) {
 function appShowRadar(result) {
   var panel = document.getElementById("radarPanel");
   var app = document.getElementById("app");
+  var config;
 
   if (!result) {
     panel.className = "hidden";
+    panel.style.backgroundColor = "";
+    panel.style.color = "";
+    panel.style.borderColor = "";
     app.className = "";
     return;
   }
 
+  config = SPEED_CONFIG[Number(result.radar.speed)] || {
+    color: "#ef5b00",
+    text: "#ffffff"
+  };
+
   panel.className = "";
+  panel.style.backgroundColor = config.color;
+  panel.style.color = config.text;
+  panel.style.borderColor = config.text;
+
   document.getElementById("radarLimit").textContent = result.radar.speed;
   document.getElementById("radarDistance").textContent =
     Math.max(0, Math.round(result.distance)) + " m";

@@ -99,7 +99,8 @@ button {
 #radarInfo {
   margin-top: 5px;
   font-size: 14px;
-  color: #d8d8d8;
+  color: inherit;
+  opacity: 0.85;
 }
 
 #messagePanel {
@@ -171,4 +172,39 @@ button {
   margin-top: 12px;
   background: #ffffff;
   color: #111111;
+}
+
+#audioControls {
+  position: fixed;
+  top: max(72px, calc(env(safe-area-inset-top) + 58px));
+  right: max(12px, env(safe-area-inset-right));
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audioButton {
+  width: 58px;
+  height: 58px;
+  min-height: 58px;
+  padding: 6px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.audioButton img {
+  display: block;
+  width: 46px;
+  height: 46px;
+  pointer-events: none;
+}
+
+.audioButton:active {
+  opacity: 0.65;
 }
