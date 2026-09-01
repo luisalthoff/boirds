@@ -1,4 +1,4 @@
-var CACHE_NAME = "radar-br-app-v0.4.1-audio-colors";
+var CACHE_NAME = "radar-br-app-v0.4.1-directionmode";
 var CACHE_PREFIX = "radar-br-app";
 
 var APP_FILES = [

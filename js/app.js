@@ -157,12 +157,8 @@ function appShowRadar(result) {
   document.getElementById("radarLimit").textContent = result.radar.speed;
   document.getElementById("radarDistance").textContent =
     Math.max(0, Math.round(result.distance)) + " m";
-  document.getElementById("radarRoad").textContent =
-    (result.radar.road || "") +
-    (typeof result.radar.km === "number" ? " • km " + result.radar.km : "");
-
-  document.getElementById("radarInfo").textContent =
-    appRadarTypeName(result.radar.type);
+  document.getElementById("radarRoad").textContent = "";
+  document.getElementById("radarInfo").textContent = "Radar";
 
   app.className = "warning";
 }

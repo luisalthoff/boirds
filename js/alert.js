@@ -242,7 +242,7 @@ function alertRadar(radar, distance) {
 
   if (distance <= ALERT_VOICE_DISTANCE && !alertVoiceDone) {
     if (!alertPlaySpeedAudio(radar.speed)) {
-      typeName = ALERT_TYPE_NAMES[radar.type] || "Radar";
+      typeName = "Radar";
       alertSpeak(typeName + ". Limite " + radar.speed + ".");
     }
 

@@ -19,22 +19,19 @@ function radarSetList(list) {
 }
 
 function radarSourceDirectionMatches(heading, radar) {
-  var opposite;
-
-  if (radar.all || typeof radar.direction !== "number" || isNaN(radar.direction)) {
+  // MapaRadar directionMode:
+  // 0 = all directions -> always applicable
+  // 1 = single direction -> compare GPS heading with stored direction
+  // 2 = dual direction -> always applicable for Radar BR
+  if (radar.directionMode === 0 || radar.directionMode === 2) {
     return true;
   }
 
-  if (helperAngleDifference(heading, radar.direction) <= RADAR_MAX_DIRECTION_ERROR) {
+  if (typeof radar.direction !== "number" || isNaN(radar.direction)) {
     return true;
   }
 
-  if (radar.dual) {
-    opposite = helperNormalizeAngle(radar.direction + 180);
-    return helperAngleDifference(heading, opposite) <= RADAR_MAX_DIRECTION_ERROR;
-  }
-
-  return false;
+  return helperAngleDifference(heading, radar.direction) <= RADAR_MAX_DIRECTION_ERROR;
 }
 
 function radarMatchesDirection(position, radar, bearingToRadar) {
