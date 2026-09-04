@@ -1,8 +1,36 @@
 var appCurrentRadarSpeedLimit = null;
 var appCurrentSpeed = null;
+var appWakeLock = null;
+
+async function appWakeLockEnable() {
+  if (!("wakeLock" in navigator)) {
+    console.log("Wake Lock not supported");
+    return;
+  }
+
+  if (appWakeLock !== null) {
+    return;
+  }
+
+  try {
+    appWakeLock = await navigator.wakeLock.request("screen");
+
+    appWakeLock.addEventListener("release", function() {
+      appWakeLock = null;
+      console.log("Wake Lock released");
+    });
+
+    console.log("Wake Lock enabled");
+  } catch (error) {
+    appWakeLock = null;
+    console.log("Wake Lock error:", error);
+  }
+}
+
 
 function appInit() {
   appLoadVersion();
+  appWakeLockEnable();
   alertInit();
 
   document.getElementById("btnStart").addEventListener("click", function() {
@@ -219,5 +247,15 @@ function appShowRadar(result) {
   app.className = "warning";
 }
 
+
+document.addEventListener("visibilitychange", function() {
+  if (document.visibilityState === "visible") {
+    appWakeLockEnable();
+  }
+});
+
+document.addEventListener("click", function() {
+  appWakeLockEnable();
+}, { once: true });
 
 document.addEventListener("DOMContentLoaded", appInit);
