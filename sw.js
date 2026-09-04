@@ -1,4 +1,4 @@
-var CACHE_NAME = "radar-br-app-v0.4.1-directionmode";
+var CACHE_NAME = "radar-br-app-v0.5.2";
 var CACHE_PREFIX = "radar-br-app";
 
 var APP_FILES = [
@@ -6,6 +6,7 @@ var APP_FILES = [
   "index.html",
   "manifest.json",
   "version.json",
+  "data/radars.json",
   "css/style.css",
   "js/helper.js",
   "js/database.js",
@@ -62,12 +63,6 @@ self.addEventListener("fetch", function(event) {
   var url = new URL(request.url);
 
   if (request.method !== "GET") {
-    return;
-  }
-
-  // Radar database updates must always come directly from the network.
-  if (url.pathname.indexOf("/data/radars.json") !== -1) {
-    event.respondWith(fetch(request));
     return;
   }
 

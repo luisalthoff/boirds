@@ -1,3 +1,6 @@
+var appCurrentRadarSpeedLimit = null;
+var appCurrentSpeed = null;
+
 function appInit() {
   appLoadVersion();
   alertInit();
@@ -33,7 +36,7 @@ function appInit() {
     appUpdateDatabaseStatus(list.length);
 
     if (list.length === 0) {
-      appSetMessage("Base vazia. Toque em ATUALIZAR RADARES.");
+      appLoadBundledDatabase();
     } else {
       appSetMessage("Pronto.");
     }
@@ -46,6 +49,37 @@ function appInit() {
       });
     });
   }
+}
+
+function appLoadBundledDatabase() {
+  appSetMessage("Carregando base inicial...");
+
+  fetch("data/radars.json")
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error("Base inicial indisponível");
+      }
+      return response.json();
+    })
+    .then(function(data) {
+      if (!data || !Array.isArray(data.radars) || !data.radars.length) {
+        throw new Error("Base inicial vazia");
+      }
+
+      databaseSaveRadars(data.radars, function(error) {
+        if (error) {
+          appSetMessage(error.message);
+          return;
+        }
+
+        radarSetList(data.radars);
+        appUpdateDatabaseStatus(data.radars.length);
+        appSetMessage("Pronto.");
+      });
+    })
+    .catch(function() {
+      appSetMessage("Base vazia. Toque em ATUALIZAR RADARES.");
+    });
 }
 
 function appSetMessage(text) {
@@ -115,17 +149,34 @@ function appGpsStopped() {
   document.getElementById("btnStart").textContent = "INICIAR GPS";
   document.getElementById("gpsStatus").textContent = "GPS: parado";
   document.getElementById("speedValue").textContent = "--";
+  appCurrentSpeed = null;
   appShowRadar(null);
+}
+
+function appUpdateSpeedColor() {
+  var speedValue = document.getElementById("speedValue");
+
+  if (typeof appCurrentSpeed === "number" &&
+      appCurrentRadarSpeedLimit > 0 &&
+      appCurrentSpeed > appCurrentRadarSpeedLimit) {
+    speedValue.classList.add("overLimit");
+  } else {
+    speedValue.classList.remove("overLimit");
+  }
 }
 
 function appGpsUpdate(position) {
   var speedText = "--";
+  var speedValue = document.getElementById("speedValue");
 
   if (typeof position.speed === "number") {
     speedText = Math.round(position.speed);
   }
 
-  document.getElementById("speedValue").textContent = speedText;
+  speedValue.textContent = speedText;
+  appCurrentSpeed = typeof position.speed === "number" ? position.speed : null;
+  appUpdateSpeedColor();
+
   document.getElementById("gpsStatus").textContent =
     "GPS: ±" + Math.round(position.accuracy) + " m";
 }
@@ -141,6 +192,8 @@ function appShowRadar(result) {
     panel.style.color = "";
     panel.style.borderColor = "";
     app.className = "";
+    appCurrentRadarSpeedLimit = null;
+    appUpdateSpeedColor();
     return;
   }
 
@@ -154,7 +207,10 @@ function appShowRadar(result) {
   panel.style.color = config.text;
   panel.style.borderColor = config.text;
 
-  document.getElementById("radarLimit").textContent = result.radar.speed;
+  appCurrentRadarSpeedLimit = Number(result.radar.speed) || null;
+  appUpdateSpeedColor();
+  document.getElementById("radarLimit").textContent =
+    appCurrentRadarSpeedLimit ? appCurrentRadarSpeedLimit : "?";
   document.getElementById("radarDistance").textContent =
     Math.max(0, Math.round(result.distance)) + " m";
   document.getElementById("radarRoad").textContent = "";
@@ -163,16 +219,5 @@ function appShowRadar(result) {
   app.className = "warning";
 }
 
-
-function appRadarTypeName(type) {
-  var names = {
-    1: "Radar Fixo",
-    2: "Semáforo com Radar",
-    4: "Radar de Trecho",
-    5: "Radar Móvel"
-  };
-
-  return names[type] || "Radar";
-}
 
 document.addEventListener("DOMContentLoaded", appInit);

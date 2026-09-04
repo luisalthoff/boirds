@@ -208,3 +208,7 @@ button {
 .audioButton:active {
   opacity: 0.65;
 }
+
+#speedValue.overLimit {
+  color: #ff2d2d;
+}

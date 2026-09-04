@@ -1,37 +1,67 @@
 var radarList = [];
 var radarActive = null;
-var radarPassed = {};
-var radarBehindCount = 0;
+var radarPassed = [];
+var radarClosestDistance = Infinity;
+var radarHasPassed = false;
+var radarWarningStarted = false;
 
-var RADAR_TRACK_DISTANCE = 600;
-var RADAR_WARNING_DISTANCE = 500;
-var RADAR_RELEASE_DISTANCE = 700;
+var RADAR_TRACK_DISTANCE = 1200;
+var RADAR_REARM_DISTANCE = 1000;
+var RADAR_POST_DISTANCE = 200;
 var RADAR_MAX_DIRECTION_ERROR = 65;
 var RADAR_BEHIND_ANGLE = 90;
-var RADAR_BEHIND_CONFIRMATIONS = 2;
+var RADAR_PASS_ARM_DISTANCE = 250;
+var RADAR_PASS_DISTANCE_INCREASE = 20;
 
 function radarSetList(list) {
   radarList = list || [];
   radarActive = null;
-  radarPassed = {};
-  radarBehindCount = 0;
+  radarPassed = [];
+  radarClosestDistance = Infinity;
+  radarHasPassed = false;
+  radarWarningStarted = false;
   alertReset();
 }
 
+function radarCarDirection(heading) {
+  if (typeof heading !== "number" || isNaN(heading) || heading < 0) {
+    return 0;
+  }
+
+  heading = ((heading % 360) + 360) % 360;
+
+  // Same one-time conversion used by the database builder:
+  // southward half of the compass = +1, northward half = -1.
+  // Exact 270 degrees is assigned to +1; exact 90 degrees to -1.
+  if ((heading > 90 && heading < 270) || heading === 270) {
+    return 1;
+  }
+
+  return -1;
+}
+
 function radarSourceDirectionMatches(heading, radar) {
-  // MapaRadar directionMode:
-  // 0 = all directions -> always applicable
-  // 1 = single direction -> compare GPS heading with stored direction
-  // 2 = dual direction -> always applicable for Radar BR
-  if (radar.directionMode === 0 || radar.directionMode === 2) {
+  var detection = Number(radar.detection);
+  var direction = Number(radar.direction);
+  var carDirection;
+
+  // 0 = all directions, 2 = dual direction.
+  if (detection === 0 || detection === 2) {
     return true;
   }
 
-  if (typeof radar.direction !== "number" || isNaN(radar.direction)) {
+  // Unknown/missing metadata is treated conservatively as applicable.
+  if (detection !== 1 || (direction !== -1 && direction !== 1)) {
     return true;
   }
 
-  return helperAngleDifference(heading, radar.direction) <= RADAR_MAX_DIRECTION_ERROR;
+  carDirection = radarCarDirection(heading);
+
+  if (carDirection === 0) {
+    return true;
+  }
+
+  return carDirection === direction;
 }
 
 function radarMatchesDirection(position, radar, bearingToRadar) {
@@ -41,6 +71,8 @@ function radarMatchesDirection(position, radar, bearingToRadar) {
     return true;
   }
 
+  // The radar must still be ahead of the car. The source direction itself is
+  // now a simple -1/0/+1 comparison and no longer uses an azimuth at runtime.
   if (helperAngleDifference(heading, bearingToRadar) > RADAR_MAX_DIRECTION_ERROR) {
     return false;
   }
@@ -79,16 +111,12 @@ function radarIsBehind(position, result) {
 }
 
 function radarUpdatePassedState(position) {
-  var id;
+  var i;
   var radar;
   var distance;
 
-  for (id in radarPassed) {
-    if (!Object.prototype.hasOwnProperty.call(radarPassed, id)) {
-      continue;
-    }
-
-    radar = radarPassed[id];
+  for (i = radarPassed.length - 1; i >= 0; i--) {
+    radar = radarPassed[i];
     distance = helperDistanceMeters(
       position.latitude,
       position.longitude,
@@ -96,8 +124,8 @@ function radarUpdatePassedState(position) {
       radar.lon
     );
 
-    if (distance > RADAR_RELEASE_DISTANCE) {
-      delete radarPassed[id];
+    if (distance > RADAR_REARM_DISTANCE) {
+      radarPassed.splice(i, 1);
     }
   }
 }
@@ -111,7 +139,7 @@ function radarFindNearest(position) {
   for (i = 0; i < radarList.length; i++) {
     radar = radarList[i];
 
-    if (radarPassed[radar.id]) {
+    if (radarPassed.indexOf(radar) !== -1) {
       continue;
     }
 
@@ -135,17 +163,32 @@ function radarFindNearest(position) {
 
 function radarClear(markPassed) {
   if (markPassed && radarActive) {
-    radarPassed[radarActive.id] = radarActive;
+    radarPassed.push(radarActive);
   }
 
   radarActive = null;
-  radarBehindCount = 0;
+  radarClosestDistance = Infinity;
+  radarHasPassed = false;
+  radarWarningStarted = false;
   alertReset();
   appShowRadar(null);
 }
 
+function radarPassDetected(position, result) {
+  if (radarClosestDistance > RADAR_PASS_ARM_DISTANCE) {
+    return false;
+  }
+
+  if (radarIsBehind(position, result)) {
+    return true;
+  }
+
+  return result.distance >= radarClosestDistance + RADAR_PASS_DISTANCE_INCREASE;
+}
+
 function radarHandleActive(position) {
   var result;
+  var voiceDistance;
 
   if (!radarActive) {
     return false;
@@ -153,27 +196,51 @@ function radarHandleActive(position) {
 
   result = radarResultFor(position, radarActive);
 
-  if (radarIsBehind(position, result)) {
-    radarBehindCount++;
+  if (result.distance < radarClosestDistance) {
+    radarClosestDistance = result.distance;
+  }
 
-    if (radarBehindCount >= RADAR_BEHIND_CONFIRMATIONS) {
+  if (!radarHasPassed && radarPassDetected(position, result)) {
+    radarHasPassed = true;
+    radarWarningStarted = true;
+  }
+
+  // After passing the MapaRadar reference point, keep the warning box,
+  // red/white speed rule and beeping alive through +200 m.
+  if (radarHasPassed) {
+    if (result.distance >= RADAR_POST_DISTANCE) {
       radarClear(true);
       return false;
     }
-  } else {
-    radarBehindCount = 0;
-  }
 
-  if (result.distance > RADAR_RELEASE_DISTANCE) {
-    radarClear(false);
-    return false;
-  }
-
-  if (result.distance <= RADAR_WARNING_DISTANCE) {
     appShowRadar(result);
-    alertRadar(result.radar, result.distance);
+    alertRadar(result.radar, result.distance, position.speed, true);
+    return true;
+  }
+
+  // Voice distance is dynamic: current car speed (m/s) x 20 seconds.
+  // Once the voice zone is entered, the visual warning stays active until
+  // the radar is fully released after +200 m.
+  if (!radarWarningStarted) {
+    voiceDistance = alertVoiceDistanceForCarSpeed(position.speed);
+
+    if (result.distance <= voiceDistance) {
+      radarWarningStarted = true;
+    }
+  }
+
+  if (radarWarningStarted) {
+    appShowRadar(result);
+    alertRadar(result.radar, result.distance, position.speed, false);
   } else {
     appShowRadar(null);
+  }
+
+  // If the active radar was never recognized as passed and the car moves far
+  // away from it (for example after leaving the road), abandon the candidate.
+  if (result.distance > RADAR_TRACK_DISTANCE) {
+    radarClear(false);
+    return false;
   }
 
   return true;
@@ -196,12 +263,9 @@ function radarCheck(position) {
   }
 
   radarActive = result.radar;
-  radarBehindCount = 0;
+  radarClosestDistance = result.distance;
+  radarHasPassed = false;
+  radarWarningStarted = false;
 
-  if (result.distance <= RADAR_WARNING_DISTANCE) {
-    appShowRadar(result);
-    alertRadar(result.radar, result.distance);
-  } else {
-    appShowRadar(null);
-  }
+  radarHandleActive(position);
 }

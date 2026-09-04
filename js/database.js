@@ -1,5 +1,5 @@
 var DB_NAME = "radarBrDatabase";
-var DB_VERSION = 1;
+var DB_VERSION = 3;
 var DB_STORE = "radars";
 
 function databaseOpen(callback) {
@@ -13,9 +13,13 @@ function databaseOpen(callback) {
   request.onupgradeneeded = function(event) {
     var db = event.target.result;
 
-    if (!db.objectStoreNames.contains(DB_STORE)) {
-      db.createObjectStore(DB_STORE, { keyPath: "id" });
+    // v3 runtime schema: lat, lon, speed, detection, direction only.
+    // No persistent ID/key is required, so the store uses generated keys.
+    if (db.objectStoreNames.contains(DB_STORE)) {
+      db.deleteObjectStore(DB_STORE);
     }
+
+    db.createObjectStore(DB_STORE, { autoIncrement: true });
   };
 
   request.onsuccess = function(event) {
@@ -43,7 +47,7 @@ function databaseSaveRadars(radars, callback) {
     store.clear();
 
     for (i = 0; i < radars.length; i++) {
-      store.put(radars[i]);
+      store.add(radars[i]);
     }
 
     tx.oncomplete = function() {

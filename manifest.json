@@ -1,7 +1,7 @@
 {
   "name": "Radar BR",
   "short_name": "Radar BR",
-  "description": "Detector offline de radares para RS, SC, PR, SP e RJ.",
+  "description": "Detector offline de radares para o Brasil.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

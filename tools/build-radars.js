@@ -2,46 +2,42 @@
 
 const fs = require("fs");
 
-const INPUT = process.argv[2] || "maparadar-sc-pr-sp-raw.json";
+const INPUT = process.argv[2] || "source.json";
 const OUTPUT = process.argv[3] || "../data/radars.json";
+const INCLUDED_TYPES = new Set([1, 2, 4, 5]);
 
-function directionMode(poi) {
+function normalizeAngle(value) {
+  value = Number(value) % 360;
+  return value < 0 ? value + 360 : value;
+}
+
+function detection(poi) {
   if (poi.allDirections) return 0;
   if (poi.isDualDirection) return 2;
   return 1;
 }
 
-function compactPoi(poi) {
+function direction(poi, mode) {
+  const azimuth = normalizeAngle(poi.direction || 0);
+  if (mode === 0 || mode === 2) return 0;
+  return ((azimuth > 90 && azimuth < 270) || azimuth === 270) ? 1 : -1;
+}
+
+function compact(poi) {
+  const mode = detection(poi);
   return {
-    id: Number(poi.id),
-    lat: Number(poi.latitude),
-    lon: Number(poi.longitude),
-    speed: Number(poi.speed),
-    directionMode: directionMode(poi),
-    direction: ((Number(poi.direction) || 0) % 360 + 360) % 360
+    lat: Number(poi.latitude), lon: Number(poi.longitude), speed: Number(poi.speed),
+    detection: mode, direction: direction(poi, mode)
   };
 }
 
 const source = JSON.parse(fs.readFileSync(INPUT, "utf8"));
 const pois = Array.isArray(source.pois) ? source.pois : [];
+const radars = pois.filter(poi =>
+  poi && !poi.isDeleted && INCLUDED_TYPES.has(Number(poi.type)) &&
+  Number(poi.speed) >= 30 && Number.isFinite(Number(poi.latitude)) &&
+  Number.isFinite(Number(poi.longitude))
+).map(compact);
 
-const radars = pois
-  .filter(function(poi) {
-    return !poi.isDeleted &&
-      Number.isFinite(Number(poi.latitude)) &&
-      Number.isFinite(Number(poi.longitude)) &&
-      Number.isFinite(Number(poi.speed));
-  })
-  .map(compactPoi)
-  .sort(function(a, b) { return a.id - b.id; });
-
-const output = {
-  source: "MapaRadar",
-  states: ["SC", "PR", "SP"],
-  count: radars.length,
-  directionMode: { "0": "all", "1": "single", "2": "dual" },
-  radars: radars
-};
-
-fs.writeFileSync(OUTPUT, JSON.stringify(output) + "\n");
-console.log("Generated " + radars.length + " radars: " + OUTPUT);
+fs.writeFileSync(OUTPUT, JSON.stringify({ updatedAt: new Date().toISOString(), radars }) + "\n");
+console.log(`Generated ${radars.length} radars: ${OUTPUT}`);
