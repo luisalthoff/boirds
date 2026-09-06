@@ -234,7 +234,15 @@ function appInit() {
   if (button) {
     button.addEventListener("click", function() {
       appHideGpsPermissionHelp();
-      gpsStart();
+      gpsRestart();
+    });
+  }
+
+  button = document.getElementById("btnStart");
+  if (button) {
+    button.addEventListener("click", function() {
+      appHideGpsPermissionHelp();
+      gpsRestart();
     });
   }
 
@@ -253,7 +261,9 @@ function appInit() {
     button.addEventListener("click", alertVolumeDown);
   }
 
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator &&
+      location.hostname !== "localhost" &&
+      location.hostname !== "127.0.0.1") {
     window.addEventListener("load", function() {
       navigator.serviceWorker.register("sw.js").then(function(registration) {
         registration.update();
@@ -343,19 +353,42 @@ function appHideGpsPermissionHelp() {
   document.getElementById("gpsPermissionPanel").className = "hidden";
 }
 
+function appSetSpeedometerVisible(visible) {
+  var panel = document.getElementById("speedPanel");
+
+  if (!panel) {
+    return;
+  }
+
+  panel.className = visible ? "" : "hidden";
+}
+
 function appGpsStarted() {
+  var button = document.getElementById("btnStart");
+
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
+
+  if (button) {
+    button.className = "compactButton gpsButton active hidden";
+  }
 }
 
 function appGpsStopped() {
+  var button = document.getElementById("btnStart");
+
   document.getElementById("gpsStatus").textContent = "GPS: parado";
+
+  if (button) {
+    button.className = "compactButton gpsButton active";
+  }
   appCurrentSpeed = null;
   appShowRadar(null);
-  speedometerDraw();
+  appSetSpeedometerVisible(false);
 }
 
 function appGpsUpdate(position) {
   appCurrentSpeed = typeof position.speed === "number" ? position.speed : null;
+  appSetSpeedometerVisible(true);
   speedometerDraw();
 
   document.getElementById("gpsStatus").textContent =
