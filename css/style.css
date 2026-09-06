@@ -141,7 +141,7 @@ button {
   justify-content: center;
   border: clamp(9px, 2.4vw, 13px) solid var(--radar-red);
   border-radius: 50%;
-  background: var(--radar-white);
+  background: transparent;
 }
 
 #radarLimit {
