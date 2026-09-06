@@ -32,16 +32,6 @@ function appInit() {
   appWakeLockEnable();
   alertInit();
 
-  document.getElementById("btnStart").addEventListener("click", function() {
-    alertPrepareAudio();
-
-    if (gpsWatchId === null && !gpsPermissionRequesting) {
-      gpsStart();
-    } else if (gpsWatchId !== null) {
-      gpsStop();
-    }
-  });
-
   document.getElementById("btnGpsRetry").addEventListener("click", function() {
     appHideGpsPermissionHelp();
     gpsStart();
@@ -51,6 +41,7 @@ function appInit() {
   document.getElementById("btnVolumeUp").addEventListener("click", alertVolumeUp);
   document.getElementById("btnVolumeDown").addEventListener("click", alertVolumeDown);
 
+  gpsStart();
   appLoadRadars();
 
   if ("serviceWorker" in navigator) {
@@ -142,20 +133,10 @@ function appHideGpsPermissionHelp() {
 }
 
 function appGpsStarted() {
-  var button = document.getElementById("btnStart");
-
-  button.disabled = false;
-  button.textContent = "GPS ON";
-  button.classList.add("active");
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
 }
 
 function appGpsStopped() {
-  var button = document.getElementById("btnStart");
-
-  button.disabled = false;
-  button.textContent = "GPS";
-  button.classList.remove("active");
   document.getElementById("gpsStatus").textContent = "GPS: parado";
   document.getElementById("speedValue").textContent = "--";
   appCurrentSpeed = null;
@@ -223,6 +204,7 @@ document.addEventListener("visibilitychange", function() {
 
 document.addEventListener("click", function() {
   appWakeLockEnable();
+  alertPrepareAudio();
 }, { once: true });
 
 document.addEventListener("DOMContentLoaded", appInit);
