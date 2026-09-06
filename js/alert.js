@@ -4,6 +4,7 @@ var alertBeepStarted = false;
 var alertBeepTimer = null;
 var alertAudioContext = null;
 var alertVolume = 0.8;
+var alertVoice = null;
 
 var ALERT_VOICE_SECONDS = 20;
 var ALERT_BEEP_SECONDS = 10;
@@ -41,11 +42,33 @@ function alertBeepDistanceForCarSpeed(speedKmh) {
   );
 }
 
+function alertLoadVoice() {
+  var voices;
+
+  if (!window.speechSynthesis) {
+    return;
+  }
+
+  voices = speechSynthesis.getVoices();
+
+  alertVoice = voices.find(function(voice) {
+    return String(voice.lang).toLowerCase() === "pt-br";
+  }) || voices.find(function(voice) {
+    return String(voice.lang).toLowerCase().indexOf("pt") === 0;
+  }) || null;
+}
+
 function alertInit() {
   var stored = Number(localStorage.getItem(ALERT_VOLUME_STORAGE_KEY));
 
   if (stored >= 0.2 && stored <= 1) {
     alertVolume = stored;
+  }
+
+  alertLoadVoice();
+
+  if (window.speechSynthesis) {
+    speechSynthesis.onvoiceschanged = alertLoadVoice;
   }
 }
 
@@ -134,7 +157,7 @@ function alertSpeakSpeed(speed) {
   var utterance;
   var numericSpeed = Number(speed);
   var text = numericSpeed > 0
-    ? "Radar. Limit" + numericSpeed + "."
+    ? "Radar. Limite " + numericSpeed + "."
     : "Radar.";
 
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
@@ -143,9 +166,16 @@ function alertSpeakSpeed(speed) {
 
   try {
     speechSynthesis.cancel();
+    alertLoadVoice();
     utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "en-UK";
-    utterance.rate = 1.0;
+
+    if (alertVoice) {
+      utterance.voice = alertVoice;
+      utterance.lang = alertVoice.lang;
+    } else {
+      utterance.lang = "pt-BR";
+    }
+
     utterance.volume = alertVolume;
     speechSynthesis.speak(utterance);
   } catch (e) {

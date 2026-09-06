@@ -58,7 +58,6 @@
       </div>
 
       <section id="controls" aria-label="Controles">
-        <button id="btnT" class="compactButton gpsButton" type="button" onclick="testVoices()">TESTA VOZ</button>
         <button id="btnStart" class="compactButton gpsButton" type="button">GPS</button>
         <button id="btnSoundTest" class="compactButton iconButton" type="button" aria-label="Testar som">
           <img src="img/sT.svg" alt="">
@@ -84,32 +83,5 @@
   <script src="js/radar.js"></script>
   <script src="js/gps.js"></script>
   <script src="js/app.js"></script>
-
-  <script>
-    function testVoices() {
-  const voices = speechSynthesis.getVoices();
-
-  const ptVoices = voices.filter(v =>
-    v.lang.toLowerCase().startsWith("pt")
-  );
-
-  console.log(ptVoices);
-
-  ptVoices.forEach((voice, i) => {
-    setTimeout(() => {
-      console.log(`${i}: ${voice.name} - ${voice.lang}`);
-
-      const msg = new SpeechSynthesisUtterance(
-        `Voz ${i + 1}. Radar. Limite 60.`
-      );
-
-      msg.voice = voice;
-      msg.lang = voice.lang;
-
-      speechSynthesis.speak(msg);
-    }, i * 4000);
-  });
-}
-  </script>
 </body>
 </html>

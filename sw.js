@@ -1,4 +1,4 @@
-var CACHE_NAME = "radar-br-app-v0.6.1";
+var CACHE_NAME = "radar-br-app-v0.6.2";
 var CACHE_PREFIX = "radar-br-app";
 
 var APP_FILES = [

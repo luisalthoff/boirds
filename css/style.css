@@ -19,7 +19,10 @@ body {
 
 button {
   border: 0;
+  margin: 0;
   font-family: inherit;
+  -webkit-appearance: none;
+  appearance: none;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -158,6 +161,8 @@ button {
 
 #controls {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: center;
   gap: 8px;
@@ -165,11 +170,18 @@ button {
 }
 
 .compactButton {
+  flex: 0 0 auto;
+  width: auto;
   height: 40px;
   min-height: 40px;
+  margin: 0;
+  padding: 0;
+  border: 0;
   border-radius: 9px;
   background: #242424;
   color: #ffffff;
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .compactButton:active {
@@ -177,7 +189,9 @@ button {
 }
 
 .gpsButton {
+  width: 74px;
   min-width: 74px;
+  max-width: 74px;
   padding: 0 12px;
   font-size: 13px;
   font-weight: 800;
@@ -191,6 +205,8 @@ button {
 
 .iconButton {
   width: 42px;
+  min-width: 42px;
+  max-width: 42px;
   padding: 4px;
   display: flex;
   align-items: center;
