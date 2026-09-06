@@ -23,21 +23,24 @@
       <div id="gpsStatus">GPS: aguardando</div>
     </section>
 
-    <section id="radarPanel" class="hidden" aria-label="Alerta de radar">
+    <section id="radarPanel" class="hidden" aria-label="Distância até o radar">
       <div id="distanceSign">
         <span id="radarDistanceValue">--</span>
         <span id="radarDistanceUnit">m</span>
       </div>
     </section>
-    <section id="radarPanel" class="hidden" aria-label="Alerta de radar">
-      <div id="limitSign" aria-label="Limite do radar">
-        <span id="radarLimit">--</span>
+
+    <section id="speedPanel" aria-label="Velocidade atual">
+      <div id="speedometerWrapper">
+        <canvas id="speedometerCanvas" width="960" height="960" aria-label="Velocímetro"></canvas>
       </div>
     </section>
 
-    <section id="speedPanel" aria-label="Velocidade atual">
-      <div id="speedValue">--</div>
-      <div id="speedUnit">km/h</div>
+    <section id="limitPanel" class="hidden" aria-label="Limite do radar">
+      <div id="limitSign">
+        <span id="radarLimit">--</span>
+        <span id="limitUnit">km/h</span>
+      </div>
     </section>
 
     <section id="gpsPermissionPanel" class="hidden">
