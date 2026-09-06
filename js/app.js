@@ -28,26 +28,70 @@ async function appWakeLockEnable() {
 }
 
 function appInit() {
-  appLoadVersion();
-  appWakeLockEnable();
-  alertInit();
+  var button;
 
-  document.getElementById("btnGpsRetry").addEventListener("click", function() {
-    appHideGpsPermissionHelp();
+  // Start the two core functions first and independently. An optional UI/audio
+  // problem must never prevent the radar base or GPS from starting.
+  try {
+    appLoadRadars();
+  } catch (error) {
+    console.error("Radar database startup failed:", error);
+  }
+
+  try {
     gpsStart();
-  });
+  } catch (error) {
+    console.error("GPS startup failed:", error);
+  }
 
-  document.getElementById("btnSoundTest").addEventListener("click", alertTestSound);
-  document.getElementById("btnVolumeUp").addEventListener("click", alertVolumeUp);
-  document.getElementById("btnVolumeDown").addEventListener("click", alertVolumeDown);
+  // Everything below is secondary to the core radar/GPS startup.
+  try {
+    appLoadVersion();
+  } catch (error) {
+    console.error("Version startup failed:", error);
+  }
 
-  gpsStart();
-  appLoadRadars();
+  try {
+    appWakeLockEnable();
+  } catch (error) {
+    console.error("Wake Lock startup failed:", error);
+  }
+
+  try {
+    alertInit();
+  } catch (error) {
+    console.error("Audio startup failed:", error);
+  }
+
+  button = document.getElementById("btnGpsRetry");
+  if (button) {
+    button.addEventListener("click", function() {
+      appHideGpsPermissionHelp();
+      gpsStart();
+    });
+  }
+
+  button = document.getElementById("btnSoundTest");
+  if (button) {
+    button.addEventListener("click", alertTestSound);
+  }
+
+  button = document.getElementById("btnVolumeUp");
+  if (button) {
+    button.addEventListener("click", alertVolumeUp);
+  }
+
+  button = document.getElementById("btnVolumeDown");
+  if (button) {
+    button.addEventListener("click", alertVolumeDown);
+  }
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
       navigator.serviceWorker.register("sw.js").then(function(registration) {
         registration.update();
+      }).catch(function(error) {
+        console.error("Service Worker registration failed:", error);
       });
     });
   }
