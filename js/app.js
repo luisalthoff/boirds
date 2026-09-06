@@ -191,18 +191,13 @@ function speedometerDraw() {
 function appInit() {
   var button;
 
-  // Start the two core functions first and independently. An optional UI/audio
-  // problem must never prevent the radar base or GPS from starting.
+  // Load the radar base normally, but do NOT auto-start GPS.
+  // As in v0.6.2, the geolocation request is started directly by the
+  // user's tap on the GPS button. This is important for Live Server/browser testing.
   try {
     appLoadRadars();
   } catch (error) {
     console.error("Radar database startup failed:", error);
-  }
-
-  try {
-    gpsStart();
-  } catch (error) {
-    console.error("GPS startup failed:", error);
   }
 
   try {
@@ -234,15 +229,23 @@ function appInit() {
   if (button) {
     button.addEventListener("click", function() {
       appHideGpsPermissionHelp();
-      gpsRestart();
+      gpsStart();
     });
   }
 
   button = document.getElementById("btnStart");
   if (button) {
     button.addEventListener("click", function() {
+      alertPrepareAudio();
       appHideGpsPermissionHelp();
-      gpsRestart();
+
+      // Restore the proven v0.6.2 behavior: the first GPS request happens
+      // directly inside the user's click event instead of during app startup.
+      if (gpsWatchId === null && !gpsPermissionRequesting) {
+        gpsStart();
+      } else if (gpsWatchId !== null) {
+        gpsStop();
+      }
     });
   }
 
@@ -369,7 +372,9 @@ function appGpsStarted() {
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
 
   if (button) {
-    button.className = "compactButton gpsButton active hidden";
+    button.disabled = false;
+    button.textContent = "GPS ON";
+    button.className = "compactButton gpsButton active";
   }
 }
 
@@ -379,6 +384,8 @@ function appGpsStopped() {
   document.getElementById("gpsStatus").textContent = "GPS: parado";
 
   if (button) {
+    button.disabled = false;
+    button.textContent = "INICIAR GPS";
     button.className = "compactButton gpsButton active";
   }
   appCurrentSpeed = null;

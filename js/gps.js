@@ -52,18 +52,6 @@ function gpsPermissionGranted(position) {
   }
 }
 
-function gpsRestart() {
-  gpsPermissionRequesting = false;
-
-  if (gpsWatchId !== null) {
-    navigator.geolocation.clearWatch(gpsWatchId);
-    gpsWatchId = null;
-  }
-
-  gpsPreviousPosition = null;
-  gpsStart();
-}
-
 function gpsStop() {
   gpsPermissionRequesting = false;
 
