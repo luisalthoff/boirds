@@ -3,10 +3,6 @@ var alertVoiceDone = false;
 var alertBeepStarted = false;
 var alertBeepTimer = null;
 var alertAudioContext = null;
-var alertVoiceAudio = null;
-var alertVoiceBuffers = {};
-var alertVoiceLoadStarted = false;
-var alertVoiceSource = null;
 var alertVolume = 0.8;
 
 var ALERT_VOICE_SECONDS = 20;
@@ -18,17 +14,6 @@ var ALERT_BEEP_FREQUENCY = 700;
 var ALERT_BEEP_DURATION = 150;
 var ALERT_VOLUME_STEP = 0.2;
 var ALERT_VOLUME_STORAGE_KEY = "radarAlertVolume";
-
-var SPEED_CONFIG = {
-  30:  { color: "#d00000", text: "#ffffff", audio: "audio/30.mp3"  },
-  40:  { color: "#d00000", text: "#ffffff", audio: "audio/40.mp3"  },
-  60:  { color: "#e23b00", text: "#ffffff", audio: "audio/60.mp3"  },
-  80:  { color: "#ef5b00", text: "#ffffff", audio: "audio/80.mp3"  },
-  90:  { color: "#f47b00", text: "#ffffff", audio: "audio/90.mp3"  },
-  100: { color: "#f6a400", text: "#ffffff", audio: "audio/100.mp3" },
-  110: { color: "#f8c21a", text: "#111111", audio: "audio/110.mp3" },
-  120: { color: "#f9d423", text: "#111111", audio: "audio/120.mp3" }
-};
 
 function alertDistanceForSeconds(speedKmh, seconds, fallback) {
   speedKmh = Number(speedKmh);
@@ -56,101 +41,11 @@ function alertBeepDistanceForCarSpeed(speedKmh) {
   );
 }
 
-function alertLoadVoiceBuffers() {
-  var speeds;
-
-  if (alertVoiceLoadStarted || !alertAudioContext) {
-    return;
-  }
-
-  alertVoiceLoadStarted = true;
-  speeds = Object.keys(SPEED_CONFIG);
-
-  speeds.forEach(function(speed) {
-    var config = SPEED_CONFIG[speed];
-
-    fetch(config.audio, { cache: "force-cache" })
-      .then(function(response) {
-        if (!response.ok) {
-          throw new Error("Audio unavailable");
-        }
-
-        return response.arrayBuffer();
-      })
-      .then(function(arrayBuffer) {
-        return new Promise(function(resolve, reject) {
-          var settled = false;
-          var result;
-
-          function done(buffer) {
-            if (!settled) {
-              settled = true;
-              resolve(buffer);
-            }
-          }
-
-          function failed(error) {
-            if (!settled) {
-              settled = true;
-              reject(error);
-            }
-          }
-
-          try {
-            result = alertAudioContext.decodeAudioData(
-              arrayBuffer.slice(0),
-              done,
-              failed
-            );
-
-            if (result && typeof result.then === "function") {
-              result.then(done).catch(failed);
-            }
-          } catch (error) {
-            failed(error);
-          }
-        });
-      })
-      .then(function(buffer) {
-        alertVoiceBuffers[Number(speed)] = buffer;
-      })
-      .catch(function() {
-        // HTMLAudio/TTS remain available as fallbacks.
-      });
-  });
-}
-
 function alertInit() {
   var stored = Number(localStorage.getItem(ALERT_VOLUME_STORAGE_KEY));
 
   if (stored >= 0.2 && stored <= 1) {
     alertVolume = stored;
-  }
-
-  alertVoiceAudio = new Audio();
-  alertVoiceAudio.preload = "auto";
-  alertVoiceAudio.volume = alertVolume;
-}
-
-function alertUnlockWebAudio() {
-  var oscillator;
-  var gain;
-  var now;
-
-  if (!alertAudioContext || alertAudioContext.state !== "running") {
-    return;
-  }
-
-  try {
-    now = alertAudioContext.currentTime;
-    oscillator = alertAudioContext.createOscillator();
-    gain = alertAudioContext.createGain();
-    gain.gain.setValueAtTime(0.0001, now);
-    oscillator.connect(gain);
-    gain.connect(alertAudioContext.destination);
-    oscillator.start(now);
-    oscillator.stop(now + 0.02);
-  } catch (e) {
   }
 }
 
@@ -158,26 +53,24 @@ function alertPrepareAudio() {
   var AudioContextClass = window.AudioContext || window.webkitAudioContext;
   var resumePromise;
 
-  if (AudioContextClass) {
-    try {
-      if (!alertAudioContext) {
-        alertAudioContext = new AudioContextClass();
-      }
-
-      if (alertAudioContext.state === "suspended" && alertAudioContext.resume) {
-        resumePromise = alertAudioContext.resume();
-
-        if (resumePromise && typeof resumePromise.then === "function") {
-          resumePromise.then(alertUnlockWebAudio).catch(function() {});
-        }
-      } else {
-        alertUnlockWebAudio();
-      }
-    } catch (e) {
-    }
+  if (!AudioContextClass) {
+    return;
   }
 
-  alertLoadVoiceBuffers();
+  try {
+    if (!alertAudioContext) {
+      alertAudioContext = new AudioContextClass();
+    }
+
+    if (alertAudioContext.state === "suspended" && alertAudioContext.resume) {
+      resumePromise = alertAudioContext.resume();
+
+      if (resumePromise && typeof resumePromise.catch === "function") {
+        resumePromise.catch(function() {});
+      }
+    }
+  } catch (e) {
+  }
 }
 
 function alertReset() {
@@ -206,7 +99,10 @@ function alertBeep() {
     oscillator.frequency.setValueAtTime(ALERT_BEEP_FREQUENCY, now);
     beepGain = 0.025 + (alertVolume * 0.12);
     gain.gain.setValueAtTime(beepGain, now);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + ALERT_BEEP_DURATION / 1000);
+    gain.gain.exponentialRampToValueAtTime(
+      0.001,
+      now + ALERT_BEEP_DURATION / 1000
+    );
 
     oscillator.connect(gain);
     gain.connect(alertAudioContext.destination);
@@ -221,6 +117,7 @@ function alertStartBeeping() {
     return;
   }
 
+  alertPrepareAudio();
   alertBeepStarted = true;
   alertBeep();
   alertBeepTimer = setInterval(alertBeep, ALERT_BEEP_INTERVAL);
@@ -233,8 +130,12 @@ function alertStopBeeping() {
   }
 }
 
-function alertSpeak(text) {
+function alertSpeakSpeed(speed) {
   var utterance;
+  var numericSpeed = Number(speed);
+  var text = numericSpeed > 0
+    ? "Radar. Limit" + numericSpeed + "."
+    : "Radar.";
 
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
     return;
@@ -243,84 +144,11 @@ function alertSpeak(text) {
   try {
     speechSynthesis.cancel();
     utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = "pt-BR";
-    utterance.rate = 1.05;
+    utterance.lang = "en-UK";
+    utterance.rate = 1.0;
     utterance.volume = alertVolume;
     speechSynthesis.speak(utterance);
   } catch (e) {
-  }
-}
-
-function alertPlaySpeedAudio(speed, fallbackText) {
-  var numericSpeed = Number(speed);
-  var config = SPEED_CONFIG[numericSpeed];
-  var buffer = alertVoiceBuffers[numericSpeed];
-  var source;
-  var gain;
-  var playPromise;
-
-  if (!config) {
-    return false;
-  }
-
-  // Preferred iPhone/PWA path: decoded Web Audio buffer, prepared by a user tap.
-  if (alertAudioContext && alertAudioContext.state === "running" && buffer) {
-    try {
-      if (alertVoiceSource) {
-        try {
-          alertVoiceSource.stop();
-        } catch (e) {
-        }
-      }
-
-      source = alertAudioContext.createBufferSource();
-      gain = alertAudioContext.createGain();
-      source.buffer = buffer;
-      gain.gain.value = alertVolume;
-      source.connect(gain);
-      gain.connect(alertAudioContext.destination);
-      source.start(0);
-      alertVoiceSource = source;
-
-      source.onended = function() {
-        if (alertVoiceSource === source) {
-          alertVoiceSource = null;
-        }
-      };
-
-      return true;
-    } catch (e) {
-    }
-  }
-
-  // Fallback while the Web Audio buffer is still loading.
-  if (!alertVoiceAudio) {
-    return false;
-  }
-
-  try {
-    if (window.speechSynthesis) {
-      speechSynthesis.cancel();
-    }
-
-    alertVoiceAudio.pause();
-    alertVoiceAudio.src = config.audio;
-    alertVoiceAudio.currentTime = 0;
-    alertVoiceAudio.muted = false;
-    alertVoiceAudio.volume = alertVolume;
-    playPromise = alertVoiceAudio.play();
-
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(function() {
-        if (fallbackText) {
-          alertSpeak(fallbackText);
-        }
-      });
-    }
-
-    return true;
-  } catch (e) {
-    return false;
   }
 }
 
@@ -328,43 +156,27 @@ function alertSetVolume(value) {
   alertVolume = Math.max(0.2, Math.min(1, value));
   alertVolume = Math.round(alertVolume * 10) / 10;
   localStorage.setItem(ALERT_VOLUME_STORAGE_KEY, String(alertVolume));
-
-  if (alertVoiceAudio) {
-    alertVoiceAudio.volume = alertVolume;
-  }
-
+  alertPrepareAudio();
   alertBeep();
 }
 
 function alertVolumeUp() {
-  alertPrepareAudio();
   alertSetVolume(alertVolume + ALERT_VOLUME_STEP);
 }
 
 function alertVolumeDown() {
-  alertPrepareAudio();
   alertSetVolume(alertVolume - ALERT_VOLUME_STEP);
 }
 
 function alertTestSound() {
   alertPrepareAudio();
-
-  // Give decoded buffers a moment to finish. If not ready, HTMLAudio is used.
-  window.setTimeout(function() {
-    if (!alertPlaySpeedAudio(60, "Radar. Limite 60.")) {
-      alertSpeak("Radar. Limite 60.");
-    }
-  }, 150);
-
+  alertSpeakSpeed(60);
   window.setTimeout(alertBeep, 1300);
   window.setTimeout(alertBeep, 2300);
 }
 
-function alertRadar(radar, distance, carSpeed, hasPassed) {
+function alertRadar(radar, distance, carSpeed) {
   var speed = Number(radar.speed) || 0;
-  var fallbackText = speed > 0
-    ? "Radar. Limite " + speed + "."
-    : "Radar.";
   var beepDistance;
 
   if (alertRadarObject !== radar) {
@@ -373,19 +185,14 @@ function alertRadar(radar, distance, carSpeed, hasPassed) {
   }
 
   if (!alertVoiceDone) {
-    if (!alertPlaySpeedAudio(speed, fallbackText)) {
-      alertSpeak(fallbackText);
-    }
-
+    alertSpeakSpeed(speed);
     alertVoiceDone = true;
   }
 
-  // Before the radar, beeping begins at current speed (m/s) x 10 seconds.
-  // Once started, it never stops until the radar is released at +200 m.
   if (!alertBeepStarted) {
     beepDistance = alertBeepDistanceForCarSpeed(carSpeed);
 
-    if (hasPassed || distance <= beepDistance) {
+    if (distance <= beepDistance) {
       alertStartBeeping();
     }
   }

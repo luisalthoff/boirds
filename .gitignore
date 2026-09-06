@@ -1,3 +1,5 @@
 .DS_Store
 .vscode/
 puxi.sh
+tools/download-maparadar.js
+tools/radars-pretty.json

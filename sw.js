@@ -1,4 +1,4 @@
-var CACHE_NAME = "radar-br-app-v0.5.4";
+var CACHE_NAME = "radar-br-app-v0.6.1";
 var CACHE_PREFIX = "radar-br-app";
 
 var APP_FILES = [
@@ -9,25 +9,15 @@ var APP_FILES = [
   "data/radars.json",
   "css/style.css",
   "js/helper.js",
-  "js/database.js",
   "js/alert.js",
   "js/radar.js",
   "js/gps.js",
-  "js/update.js",
   "js/app.js",
   "img/tb-192.png",
   "img/tb-512.png",
   "img/sT.svg",
   "img/s+.svg",
-  "img/s-.svg",
-  "audio/30.mp3",
-  "audio/40.mp3",
-  "audio/60.mp3",
-  "audio/80.mp3",
-  "audio/90.mp3",
-  "audio/100.mp3",
-  "audio/110.mp3",
-  "audio/120.mp3"
+  "img/s-.svg"
 ];
 
 self.addEventListener("install", function(event) {
@@ -60,14 +50,11 @@ self.addEventListener("activate", function(event) {
 
 self.addEventListener("fetch", function(event) {
   var request = event.request;
-  var url = new URL(request.url);
 
   if (request.method !== "GET") {
     return;
   }
 
-  // App files: network first so a newly deployed GitHub Pages version is
-  // picked up automatically. If offline, use the last cached copy.
   event.respondWith(
     fetch(request)
       .then(function(response) {

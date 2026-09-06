@@ -4,10 +4,11 @@
 
 html,
 body {
+  width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #111111;
+  background: #0b0b0b;
   color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
 }
@@ -17,26 +18,90 @@ body {
 }
 
 button {
-  min-height: 56px;
   border: 0;
-  border-radius: 12px;
-  font-size: 18px;
-  font-weight: 700;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
   min-height: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   padding:
-    max(12px, env(safe-area-inset-top))
-    14px
-    max(12px, env(safe-area-inset-bottom));
+    max(10px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    max(8px, env(safe-area-inset-bottom))
+    max(12px, env(safe-area-inset-left));
+  background: #0b0b0b;
 }
 
 #statusPanel {
+  min-height: 24px;
+  text-align: center;
   font-size: 13px;
-  color: #cfcfcf;
+  font-weight: 700;
+  color: #bcbcbc;
+}
+
+#radarPanel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+#distanceSign {
+  min-width: 0;
+  min-height: 122px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 18px;
+  border: 4px solid #ffffff;
+  border-radius: 10px;
+  background: #0757b8;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+#radarDistanceValue {
+  font-size: clamp(72px, 25vw, 138px);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -4px;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+#radarDistanceUnit {
+  font-size: clamp(22px, 7vw, 38px);
+  font-weight: 800;
+  color: #ffffff;
+}
+
+#limitSign {
+  width: clamp(112px, 31vw, 154px);
+  height: clamp(112px, 31vw, 154px);
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: clamp(10px, 2.5vw, 14px) solid #d91e18;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #ffffff;
+}
+
+#radarLimit {
+  color: #111111;
+  font-size: clamp(54px, 17vw, 84px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -3px;
+  font-variant-numeric: tabular-nums;
 }
 
 #speedPanel {
@@ -46,109 +111,117 @@ button {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: 8px 0;
 }
 
 #speedValue {
-  font-size: clamp(90px, 28vw, 180px);
-  font-weight: 800;
-  line-height: 0.9;
+  color: #e8e8e8;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(98px, 31vw, 190px);
+  font-weight: 900;
+  line-height: 0.86;
+  letter-spacing: -8px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+#speedValue.safeSpeed {
+  color: #42e66b;
+  text-shadow: 0 0 12px rgba(66, 230, 107, 0.22);
+}
+
+#speedValue.overLimit {
+  color: #ff3434;
+  text-shadow: 0 0 12px rgba(255, 52, 52, 0.22);
 }
 
 #speedUnit {
   margin-top: 12px;
-  font-size: 22px;
-  color: #bdbdbd;
-}
-
-#radarPanel {
-  text-align: center;
-  border: 3px solid #ffffff;
-  border-radius: 18px;
-  padding: 12px;
-  margin-bottom: 12px;
-}
-
-#radarTitle {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 2px;
-}
-
-#radarLimit {
-  font-size: 74px;
-  font-weight: 800;
-  line-height: 0.95;
-}
-
-#radarLimitUnit {
-  font-size: 18px;
-}
-
-#radarDistance {
-  margin-top: 10px;
-  font-size: 30px;
+  font-size: 20px;
   font-weight: 700;
+  color: #8f8f8f;
 }
 
-#radarRoad {
-  margin-top: 8px;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-#radarInfo {
-  margin-top: 5px;
-  font-size: 14px;
-  color: inherit;
-  opacity: 0.85;
+#bottomPanel {
+  flex: none;
 }
 
 #messagePanel {
-  min-height: 42px;
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  font-size: 15px;
-  color: #d8d8d8;
+  font-size: 13px;
+  color: #cfcfcf;
 }
 
 #controls {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
 }
 
-#btnStart {
-  background: #ffffff;
-  color: #111111;
-}
-
-#btnUpdate {
-  background: #333333;
+.compactButton {
+  height: 40px;
+  min-height: 40px;
+  border-radius: 9px;
+  background: #242424;
   color: #ffffff;
 }
 
+.compactButton:active {
+  opacity: 0.65;
+}
+
+.gpsButton {
+  min-width: 74px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+
+.gpsButton.active {
+  background: #214b2d;
+  color: #70f28e;
+}
+
+.iconButton {
+  width: 42px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iconButton img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+}
+
 #appFooter {
-  padding-top: 10px;
+  padding-top: 6px;
   text-align: center;
-  font-size: 12px;
-  color: #8f8f8f;
+  font-size: 11px;
+  color: #6f6f6f;
   white-space: nowrap;
 }
 
 .footerSeparator {
-  margin: 0 6px;
+  margin: 0 5px;
 }
 
 .hidden {
-  display: none;
+  display: none !important;
 }
-
-.warning #radarPanel {
-  background: #5b1a1a;
-}
-
 
 #gpsPermissionPanel {
-  margin-bottom: 12px;
+  margin: 10px 0;
   padding: 14px;
   border: 2px solid #ffffff;
   border-radius: 14px;
@@ -169,46 +242,39 @@ button {
 
 #btnGpsRetry {
   width: 100%;
+  min-height: 48px;
   margin-top: 12px;
+  border-radius: 10px;
   background: #ffffff;
   color: #111111;
+  font-size: 15px;
+  font-weight: 800;
 }
 
-#audioControls {
-  position: fixed;
-  top: max(72px, calc(env(safe-area-inset-top) + 58px));
-  right: max(12px, env(safe-area-inset-right));
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
+@media (max-height: 620px) {
+  #distanceSign {
+    min-height: 96px;
+  }
 
-.audioButton {
-  width: 58px;
-  height: 58px;
-  min-height: 58px;
-  padding: 6px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  -webkit-tap-highlight-color: transparent;
-}
+  #radarDistanceValue {
+    font-size: clamp(62px, 21vw, 105px);
+  }
 
-.audioButton img {
-  display: block;
-  width: 46px;
-  height: 46px;
-  pointer-events: none;
-}
+  #limitSign {
+    width: 100px;
+    height: 100px;
+    border-width: 9px;
+  }
 
-.audioButton:active {
-  opacity: 0.65;
-}
+  #radarLimit {
+    font-size: 52px;
+  }
 
-#speedValue.overLimit {
-  color: #ff2d2d;
+  #speedPanel {
+    min-height: 120px;
+  }
+
+  #speedValue {
+    font-size: clamp(78px, 25vw, 140px);
+  }
 }

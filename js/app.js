@@ -27,7 +27,6 @@ async function appWakeLockEnable() {
   }
 }
 
-
 function appInit() {
   appLoadVersion();
   appWakeLockEnable();
@@ -48,27 +47,11 @@ function appInit() {
     gpsStart();
   });
 
-  document.getElementById("btnUpdate").addEventListener("click", updateRadars);
-
   document.getElementById("btnSoundTest").addEventListener("click", alertTestSound);
   document.getElementById("btnVolumeUp").addEventListener("click", alertVolumeUp);
   document.getElementById("btnVolumeDown").addEventListener("click", alertVolumeDown);
 
-  databaseLoadRadars(function(error, list) {
-    if (error) {
-      appSetMessage(error.message);
-      return;
-    }
-
-    radarSetList(list);
-    appUpdateDatabaseStatus(list.length);
-
-    if (list.length === 0) {
-      appLoadBundledDatabase();
-    } else {
-      appSetMessage("Pronto.");
-    }
-  });
+  appLoadRadars();
 
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", function() {
@@ -79,39 +62,33 @@ function appInit() {
   }
 }
 
-function appLoadBundledDatabase() {
-  appSetMessage("Carregando base inicial...");
-
+function appLoadRadars() {
   fetch("data/radars.json")
     .then(function(response) {
       if (!response.ok) {
-        throw new Error("Base inicial indisponível");
+        throw new Error("Base de radares indisponível");
       }
+
       return response.json();
     })
     .then(function(data) {
       if (!data || !Array.isArray(data.radars) || !data.radars.length) {
-        throw new Error("Base inicial vazia");
+        throw new Error("Base de radares vazia");
       }
 
-      databaseSaveRadars(data.radars, function(error) {
-        if (error) {
-          appSetMessage(error.message);
-          return;
-        }
-
-        radarSetList(data.radars);
-        appUpdateDatabaseStatus(data.radars.length);
-        appSetMessage("Pronto.");
-      });
+      radarSetList(data.radars);
+      appUpdateRadarStatus(data.radars.length, data.updatedAt);
     })
-    .catch(function() {
-      appSetMessage("Base vazia. Toque em ATUALIZAR RADARES.");
+    .catch(function(error) {
+      console.error("Radar database load failed:", error);
+      radarSetList([]);
+      appUpdateRadarStatus(0, "");
+      appSetMessage("Base de radares indisponível.");
     });
 }
 
 function appSetMessage(text) {
-  document.getElementById("message").textContent = text;
+  document.getElementById("message").textContent = text || "";
 }
 
 function appLoadVersion() {
@@ -146,8 +123,7 @@ function appSetVersion(version, build) {
   element.textContent = text;
 }
 
-function appUpdateDatabaseStatus(count) {
-  var updatedAt = localStorage.getItem("radarDatabaseUpdatedAt");
+function appUpdateRadarStatus(count, updatedAt) {
   var text = "Base: " + count + " radares";
 
   if (updatedAt) {
@@ -156,7 +132,6 @@ function appUpdateDatabaseStatus(count) {
 
   document.getElementById("dbStatus").textContent = text;
 }
-
 
 function appShowGpsPermissionHelp() {
   document.getElementById("gpsPermissionPanel").className = "";
@@ -167,14 +142,20 @@ function appHideGpsPermissionHelp() {
 }
 
 function appGpsStarted() {
-  document.getElementById("btnStart").disabled = false;
-  document.getElementById("btnStart").textContent = "PARAR GPS";
+  var button = document.getElementById("btnStart");
+
+  button.disabled = false;
+  button.textContent = "GPS ON";
+  button.classList.add("active");
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
 }
 
 function appGpsStopped() {
-  document.getElementById("btnStart").disabled = false;
-  document.getElementById("btnStart").textContent = "INICIAR GPS";
+  var button = document.getElementById("btnStart");
+
+  button.disabled = false;
+  button.textContent = "GPS";
+  button.classList.remove("active");
   document.getElementById("gpsStatus").textContent = "GPS: parado";
   document.getElementById("speedValue").textContent = "--";
   appCurrentSpeed = null;
@@ -184,12 +165,17 @@ function appGpsStopped() {
 function appUpdateSpeedColor() {
   var speedValue = document.getElementById("speedValue");
 
-  if (typeof appCurrentSpeed === "number" &&
-      appCurrentRadarSpeedLimit > 0 &&
-      appCurrentSpeed > appCurrentRadarSpeedLimit) {
+  speedValue.classList.remove("safeSpeed");
+  speedValue.classList.remove("overLimit");
+
+  if (typeof appCurrentSpeed !== "number" || !appCurrentRadarSpeedLimit) {
+    return;
+  }
+
+  if (appCurrentSpeed > appCurrentRadarSpeedLimit) {
     speedValue.classList.add("overLimit");
   } else {
-    speedValue.classList.remove("overLimit");
+    speedValue.classList.add("safeSpeed");
   }
 }
 
@@ -211,42 +197,23 @@ function appGpsUpdate(position) {
 
 function appShowRadar(result) {
   var panel = document.getElementById("radarPanel");
-  var app = document.getElementById("app");
-  var config;
 
   if (!result) {
     panel.className = "hidden";
-    panel.style.backgroundColor = "";
-    panel.style.color = "";
-    panel.style.borderColor = "";
-    app.className = "";
     appCurrentRadarSpeedLimit = null;
     appUpdateSpeedColor();
     return;
   }
 
-  config = SPEED_CONFIG[Number(result.radar.speed)] || {
-    color: "#ef5b00",
-    text: "#ffffff"
-  };
-
   panel.className = "";
-  panel.style.backgroundColor = config.color;
-  panel.style.color = config.text;
-  panel.style.borderColor = config.text;
-
   appCurrentRadarSpeedLimit = Number(result.radar.speed) || null;
   appUpdateSpeedColor();
+
   document.getElementById("radarLimit").textContent =
     appCurrentRadarSpeedLimit ? appCurrentRadarSpeedLimit : "?";
-  document.getElementById("radarDistance").textContent =
-    Math.max(0, Math.round(result.distance)) + " m";
-  document.getElementById("radarRoad").textContent = "";
-  document.getElementById("radarInfo").textContent = "Radar";
-
-  app.className = "warning";
+  document.getElementById("radarDistanceValue").textContent =
+    Math.max(0, Math.round(result.distance));
 }
-
 
 document.addEventListener("visibilitychange", function() {
   if (document.visibilityState === "visible") {
