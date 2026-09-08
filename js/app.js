@@ -113,7 +113,7 @@ function speedometerDraw() {
   // Unit label in the center.
   ctx.shadowBlur = 0;
   ctx.font = '700 28px Arial, Helvetica, sans-serif';
-  ctx.fillStyle = SPEEDOMETER_BLUE;
+  //ctx.fillStyle = SPEEDOMETER_BLUE;
   ctx.fillText("km/h", centerX, centerY - 92);
 
   // Needle. It always uses the exact same red as the speed-limit sign.
