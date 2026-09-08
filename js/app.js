@@ -5,7 +5,7 @@ var appWakeLock = null;
 var SPEEDOMETER_MAX_KMH = 220;
 var SPEEDOMETER_BLUE = "#38bdf8";
 var SPEEDOMETER_RED = "#ff3b30";
-var SPEEDOMETER_BLACK = "#0b0b0b";
+var SPEEDOMETER_BLACK = "#000000";
 var SPEEDOMETER_WHITE = "#ffffff";
 
 async function appWakeLockEnable()
@@ -56,7 +56,7 @@ function speedometerDraw() {
   ctx = canvas.getContext("2d");
   centerX = canvas.width / 2;
   centerY = canvas.height / 2;
-  radius = 385;
+  radius = 420;
   startAngle = Math.PI * 0.75;
   endAngle = Math.PI * 2.25;
   totalAngle = endAngle - startAngle;
