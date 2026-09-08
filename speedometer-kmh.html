@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speedometer</title>
+    <style>
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+
+        .speedometer-wrapper {
+            position: relative;
+            height: 480px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="speedometer-wrapper">
+        <canvas id="speedoCanvas" width="960" height="960"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('speedoCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Center coordinates (scaled 2x for crisp DPI)
+        const centerX = 480;
+        const centerY = 480;
+        const radius = 370;
+
+        // Angle sweep: 135deg to 405deg
+        const startAngle = Math.PI * 0.75;
+        const endAngle = Math.PI * 2.25;
+        const totalAngle = endAngle - startAngle;
+
+        const maxKmh = 220;
+        let currentSpeed = 0;
+
+        // Animation timing
+        const durationAccel = 3500;
+        const durationHold = 1200;
+        const durationDecel = 2800;
+        const durationPause = 800;
+        const totalCycle = durationAccel + durationHold + durationDecel + durationPause;
+
+        let startTime = null;
+
+        function easeInCubic(t) { return t * t * t; }
+        function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+        function drawSpeedometer(speed, timestamp) {
+            ctx.clearRect(0, 0, 1000, canvas.height);
+
+            // --- 1. DRAW TICK MARKS ---
+            const totalTicks = 110; // 2 km/h per tick
+            for (let i = 0; i <= totalTicks; i++) {
+                const kmh = (i / totalTicks) * maxKmh;
+                const angle = startAngle + (kmh / maxKmh) * totalAngle;
+                const isRed = kmh >= 110;
+
+                const isMajor = i % 5 === 0;
+                const tickLength = isMajor ? 32 : 16;
+
+                const innerR = radius - tickLength;
+                const x1 = centerX + Math.cos(angle) * innerR;
+                const y1 = centerY + Math.sin(angle) * innerR;
+                const x2 = centerX + Math.cos(angle) * radius;
+                const y2 = centerY + Math.sin(angle) * radius;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineWidth = isMajor ? 6 : 3;
+                ctx.strokeStyle = isRed ? '#ff3b30' : '#38bdf8';
+                ctx.stroke();
+            }
+
+            // --- 2. DRAW OUTER KM/H NUMBERS ---
+            ctx.font = '200 44px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            for (let kmh = 0; kmh <= maxKmh; kmh += 20) {
+                const angle = startAngle + (kmh / maxKmh) * totalAngle;
+                const isRed = kmh >= 110;
+
+                const textRadius = radius - 75;
+                const x = centerX + Math.cos(angle) * textRadius;
+                const y = centerY + Math.sin(angle) * textRadius;
+
+                ctx.fillStyle = isRed ? '#ff4d4d' : '#38bdf8';
+                ctx.fillText(kmh.toString(), x, y);
+            }
+
+            // --- 4. CENTER TEXT ---
+            ctx.font = '700 36px "Segoe UI", sans-serif';
+            ctx.fillStyle = '#ffffff55';
+            ctx.fillText('km/h', centerX, centerY - 100);
+
+            // --- 5. DIGITAL ODOMETER ---
+
+            const digitalSpeed = Math.round(speed).toString();
+
+            ctx.font = '700 142px "Courier New", monospace';
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillText(digitalSpeed, centerX, centerY+ 250);
+
+            //ctx.font = '700 50px sans-serif';
+            //ctx.fillStyle = '#1e495b';
+
+            // --- 6. NEEDLE ---
+            const currentAngle = startAngle + (Math.min(Math.max(speed, 0), maxKmh) / maxKmh) * totalAngle;
+
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentAngle - Math.PI / 2);
+
+            ctx.beginPath();
+            ctx.moveTo(-10, 0);
+            ctx.lineTo(-3, radius - 30);
+            ctx.lineTo(0, radius - 10);
+            ctx.lineTo(3, radius - 30);
+            ctx.lineTo(10, 0);
+            ctx.closePath();
+
+            const needleGrad = ctx.createLinearGradient(0, 0, 0, radius);
+            needleGrad.addColorStop(0, '#e11d48');
+            needleGrad.addColorStop(0.7, '#ff4d4d');
+            needleGrad.addColorStop(1, '#ff1a1a');
+
+            ctx.fillStyle = needleGrad;
+            ctx.fill();
+
+            ctx.restore();
+
+            // --- 7. CENTER PIVOT CAP ---
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 22, 0, Math.PI * 2);
+            const capGrad = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 1);
+            capGrad.addColorStop(0, '#501818');
+            capGrad.addColorStop(0.5, '#a82424');
+            capGrad.addColorStop(1, '#1f0606');
+            ctx.fillStyle = capGrad;
+            ctx.fill();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = '#120303';
+            ctx.stroke();
+        }
+
+        function animate(timestamp) {
+            if (!startTime) startTime = timestamp;
+            const elapsed = (timestamp - startTime) % totalCycle;
+
+            let targetSpeed = 0;
+
+            if (elapsed < durationAccel) {
+                targetSpeed = easeInCubic(elapsed / durationAccel) * 120;
+            } else if (elapsed < durationAccel + durationHold) {
+                targetSpeed = 120 + (Math.random() - 0.5) * 1.5;
+            } else if (elapsed < durationAccel + durationHold + durationDecel) {
+                const phase = elapsed - (durationAccel + durationHold);
+                targetSpeed = (1 - easeOutCubic(phase / durationDecel)) * 120;
+            } else {
+                targetSpeed = 0;
+            }
+
+            currentSpeed = targetSpeed;
+            drawSpeedometer(currentSpeed, timestamp);
+
+            //requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>

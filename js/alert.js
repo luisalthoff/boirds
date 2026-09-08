@@ -52,24 +52,10 @@ function alertLoadVoice() {
   voices = speechSynthesis.getVoices();
 
   alertVoice = voices.find(function(voice) {
-    return String(voice.lang).toLowerCase() === "pt-br";
+    return String(voice.lang).toLowerCase() === "en-UK";
   }) || voices.find(function(voice) {
-    return String(voice.lang).toLowerCase().indexOf("pt") === 0;
+    return String(voice.lang).toLowerCase().indexOf("en") === 0;
   }) || null;
-}
-
-function alertInit() {
-  var stored = Number(localStorage.getItem(ALERT_VOLUME_STORAGE_KEY));
-
-  if (stored >= 0.2 && stored <= 1) {
-    alertVolume = stored;
-  }
-
-  alertLoadVoice();
-
-  if (window.speechSynthesis) {
-    speechSynthesis.onvoiceschanged = alertLoadVoice;
-  }
 }
 
 function alertPrepareAudio() {
@@ -157,7 +143,7 @@ function alertSpeakSpeed(speed) {
   var utterance;
   var numericSpeed = Number(speed);
   var text = numericSpeed > 0
-    ? "Radar. Limite " + numericSpeed + "."
+    ? "Radar. Limit " + numericSpeed + "."
     : "Radar.";
 
   if (!window.speechSynthesis || !window.SpeechSynthesisUtterance) {
@@ -173,7 +159,7 @@ function alertSpeakSpeed(speed) {
       utterance.voice = alertVoice;
       utterance.lang = alertVoice.lang;
     } else {
-      utterance.lang = "pt-BR";
+      utterance.lang = "en-UK";
     }
 
     utterance.volume = alertVolume;

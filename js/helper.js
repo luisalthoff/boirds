@@ -61,7 +61,10 @@ function helperFormatDateTime(value) {
     return "--";
   }
 
-  return d.toLocaleDateString("pt-BR") + " " +
-    d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return (
+    d.toLocaleDateString("en-UK") +
+    " " +
+    d.toLocaleTimeString("en-UK", { hour: "2-digit", minute: "2-digit" })
+  );
 }
 

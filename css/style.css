@@ -1,10 +1,3 @@
-:root {
-  --radar-blue: #38bdf8;
-  --radar-red: #ff3b30;
-  --radar-black: #0b0b0b;
-  --radar-white: #ffffff;
-}
-
 * {
   box-sizing: border-box;
 }
@@ -15,8 +8,8 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: var(--radar-black);
-  color: var(--radar-white);
+  background: blue;
+  color: #ffffff;
   font-family: Arial, Helvetica, sans-serif;
 }
 
@@ -38,145 +31,132 @@ button {
   height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
   padding:
     max(10px, env(safe-area-inset-top))
     max(12px, env(safe-area-inset-right))
     max(8px, env(safe-area-inset-bottom))
     max(12px, env(safe-area-inset-left));
-  background: var(--radar-black);
+  background: #0b0b0b;
 }
 
 #statusPanel {
-  flex: none;
   min-height: 24px;
-  width: 100%;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
-  color: var(--radar-white);
-  opacity: 0.72;
+  color: #bcbcbc;
 }
 
 #radarPanel {
-  flex: none;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  margin-top: 8px;
   padding: 0 4px;
 }
 
 #distanceSign {
-  min-width: min(72vw, 330px);
-  min-height: 108px;
+  min-width: 0;
+  min-height: 122px;
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 7px;
-  padding: 10px 18px;
-  border: 4px solid var(--radar-white);
+  gap: 8px;
+  padding: 12px 18px;
+  border: 4px solid #ffffff;
   border-radius: 10px;
-  background: var(--radar-blue);
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.22);
+  background: #0757b8;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.18);
 }
 
 #radarDistanceValue {
-  font-size: clamp(70px, 24vw, 124px);
+  font-size: clamp(72px, 25vw, 138px);
   font-weight: 900;
-  line-height: 0.88;
+  line-height: 0.86;
   letter-spacing: -4px;
-  color: var(--radar-white);
+  color: #ffffff;
   font-variant-numeric: tabular-nums;
 }
 
 #radarDistanceUnit {
-  font-size: clamp(22px, 7vw, 36px);
+  font-size: clamp(22px, 7vw, 38px);
   font-weight: 800;
-  color: var(--radar-white);
-}
-
-#speedPanel {
-  flex: 1 1 auto;
-  min-height: 0;
-  width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 0 4px;
-}
-
-#speedometerWrapper {
-  position: relative;
-  width: min(91vw, 470px);
-  aspect-ratio: 1 / 1;
-  flex: none;
-  border: 4px solid var(--radar-white);
-  border-radius: 50%;
-  background: var(--radar-black);
-  overflow: hidden;
-}
-
-#speedometerCanvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-#limitPanel {
-  flex: none;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  padding: 2px 0 8px;
+  color: #ffffff;
 }
 
 #limitSign {
-  width: clamp(108px, 29vw, 142px);
-  height: clamp(108px, 29vw, 142px);
+  width: clamp(112px, 31vw, 154px);
+  height: clamp(112px, 31vw, 154px);
   flex: none;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: clamp(9px, 2.4vw, 13px) solid var(--radar-red);
+  border: clamp(10px, 2.5vw, 14px) solid #d91e18;
   border-radius: 50%;
-  background: var(--radar-white);
-  background-clip: padding-box;
-  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px #ffffff;
 }
 
 #radarLimit {
-  color: var(--radar-black);
-  font-size: clamp(50px, 15vw, 74px);
+  color: #111111;
+  font-size: clamp(54px, 17vw, 84px);
   font-weight: 900;
-  line-height: 0.86;
+  line-height: 1;
   letter-spacing: -3px;
   font-variant-numeric: tabular-nums;
 }
 
-#limitUnit {
-  margin-top: 7px;
-  color: var(--radar-black);
-  font-size: clamp(14px, 4.3vw, 20px);
+#speedPanel {
+  flex: 1;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+#speedValue {
+  color: #e8e8e8;
+  font-family: "Courier New", Courier, monospace;
+  font-size: clamp(98px, 31vw, 190px);
   font-weight: 900;
-  line-height: 1;
+  line-height: 0.86;
+  letter-spacing: -8px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+}
+
+#speedValue.safeSpeed {
+  color: #42e66b;
+  text-shadow: 0 0 12px rgba(66, 230, 107, 0.22);
+}
+
+#speedValue.overLimit {
+  color: #ff3434;
+  text-shadow: 0 0 12px rgba(255, 52, 52, 0.22);
+}
+
+#speedUnit {
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #8f8f8f;
 }
 
 #bottomPanel {
   flex: none;
-  width: 100%;
 }
 
 #messagePanel {
-  min-height: 18px;
+  min-height: 22px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-size: 13px;
-  color: var(--radar-white);
-  opacity: 0.8;
+  color: #cfcfcf;
 }
 
 #controls {
@@ -196,10 +176,10 @@ button {
   min-height: 40px;
   margin: 0;
   padding: 0;
-  border: 1px solid var(--radar-white);
+  border: 0;
   border-radius: 9px;
-  background: var(--radar-black);
-  color: var(--radar-white);
+  background: #242424;
+  color: #ffffff;
   -webkit-appearance: none;
   appearance: none;
 }
@@ -208,11 +188,10 @@ button {
   opacity: 0.65;
 }
 
-/* Kept for a future GPS retry/authorization button if needed. */
 .gpsButton {
-  width: 112px;
-  min-width: 112px;
-  max-width: 112px;
+  width: 74px;
+  min-width: 74px;
+  max-width: 74px;
   padding: 0 12px;
   font-size: 13px;
   font-weight: 800;
@@ -220,8 +199,8 @@ button {
 }
 
 .gpsButton.active {
-  background: var(--radar-blue);
-  color: var(--radar-black);
+  background: #214b2d;
+  color: #70f28e;
 }
 
 .iconButton {
@@ -242,11 +221,10 @@ button {
 }
 
 #appFooter {
-  padding-top: 5px;
+  padding-top: 6px;
   text-align: center;
   font-size: 11px;
-  color: var(--radar-white);
-  opacity: 0.42;
+  color: #6f6f6f;
   white-space: nowrap;
 }
 
@@ -259,12 +237,11 @@ button {
 }
 
 #gpsPermissionPanel {
-  width: 100%;
   margin: 10px 0;
   padding: 14px;
-  border: 2px solid var(--radar-white);
+  border: 2px solid #ffffff;
   border-radius: 14px;
-  background: var(--radar-black);
+  background: #242424;
 }
 
 .gpsPermissionTitle {
@@ -283,80 +260,37 @@ button {
   width: 100%;
   min-height: 48px;
   margin-top: 12px;
-  border: 2px solid var(--radar-white);
   border-radius: 10px;
-  background: var(--radar-white);
-  color: var(--radar-black);
+  background: #ffffff;
+  color: #111111;
   font-size: 15px;
   font-weight: 800;
 }
 
-@media (max-height: 760px) {
-  #radarPanel {
-    margin-top: 4px;
-  }
-
+@media (max-height: 620px) {
   #distanceSign {
-    min-height: 86px;
+    min-height: 96px;
   }
 
   #radarDistanceValue {
-    font-size: clamp(58px, 20vw, 92px);
-  }
-
-  #speedometerWrapper {
-    width: min(79vw, 350px);
+    font-size: clamp(62px, 21vw, 105px);
   }
 
   #limitSign {
-    width: 98px;
-    height: 98px;
+    width: 100px;
+    height: 100px;
     border-width: 9px;
   }
 
   #radarLimit {
-    font-size: 49px;
+    font-size: 52px;
   }
 
-  #limitUnit {
-    margin-top: 4px;
-    font-size: 14px;
-  }
-}
-
-@media (max-height: 620px) {
-  #statusPanel {
-    min-height: 20px;
-    font-size: 11px;
+  #speedPanel {
+    min-height: 120px;
   }
 
-  #distanceSign {
-    min-height: 72px;
-  }
-
-  #radarDistanceValue {
-    font-size: clamp(50px, 18vw, 76px);
-  }
-
-  #speedometerWrapper {
-    width: min(68vw, 285px);
-  }
-
-  #limitSign {
-    width: 82px;
-    height: 82px;
-    border-width: 7px;
-  }
-
-  #radarLimit {
-    font-size: 40px;
-  }
-
-  #limitUnit {
-    display: none;
-  }
-
-  #messagePanel {
-    min-height: 12px;
+  #speedValue {
+    font-size: clamp(78px, 25vw, 140px);
   }
 }
