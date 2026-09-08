@@ -334,7 +334,7 @@ function appGpsUpdate(position) {
   speedometerDraw();
 
   document.getElementById("gpsStatus").textContent =
-    "GPS: ±" + Math.round(position.accuracy) + " m";
+    "GPS: ±" + Math.round(position.accuracy) + " metros";
 }
 
 function appShowRadar(result) {
