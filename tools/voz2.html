@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>macOS Browser Text-to-Speech</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --card-bg: #ffffff;
+            --text-color: #1d1d1f;
+            --accent-color: #0071e3;
+            --border-color: #d2d2d7;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 500px;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            resize: none;
+            box-sizing: border-box;
+            font-size: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        .control-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.4rem;
+            color: #6e6e73;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            accent-color: var(--accent-color);
+        }
+
+        .value-display {
+            font-size: 0.9rem;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .btn-speak {
+            background-color: var(--accent-color);
+            color: white;
+        }
+
+        .btn-speak:hover { background-color: #0077ed; }
+
+        .btn-stop {
+            background-color: #e8e8ed;
+            color: #1d1d1f;
+        }
+
+        .btn-stop:hover { background-color: #d2d2d7; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Text to Speech</h1>
+    
+    <textarea id="text-input" placeholder="Type something for your Mac to say..."></textarea>
+
+    <div class="control-group">
+        <label for="voice-select">Voice</label>
+        <select id="voice-select">
+            <option value="">Loading voices...</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <label for="rate-input">Speed</label>
+        <div class="slider-container">
+            <input type="range" id="rate-input" min="0.5" max="2" value="1" step="0.1">
+            <span class="value-display" id="rate-val">1.0x</span>
+        </div>
+    </div>
+
+    <div class="control-group">
+        <label for="pitch-input">Pitch</label>
+        <div class="slider-container">
+            <input type="range" id="pitch-input" min="0.5" max="1.5" value="1" step="0.1">
+            <span class="value-display" id="pitch-val">1.0</span>
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="btn-stop" id="stop-btn">Stop</button>
+        <button class="btn-speak" id="speak-btn">Speak</button>
+    </div>
+</div>
+
+<script>
+    const synth = window.speechSynthesis;
+
+    const textInput = document.getElementById('text-input');
+    const voiceSelect = document.getElementById('voice-select');
+    const rateInput = document.getElementById('rate-input');
+    const rateVal = document.getElementById('rate-val');
+    const pitchInput = document.getElementById('pitch-input');
+    const pitchVal = document.getElementById('pitch-val');
+    const speakBtn = document.getElementById('speak-btn');
+    const stopBtn = document.getElementById('stop-btn');
+
+    let voices = [];
+
+    // Populate the dropdown with available macOS system voices
+    function populateVoiceList() {
+        voices = synth.getVoices();
+        voiceSelect.innerHTML = '';
+        
+        voices.forEach((voice) => {
+            const option = document.createElement('option');
+            option.textContent = `${voice.name} (${voice.lang})`;
+            
+            // Highlight default system voice
+            if (voice.default) {
+                option.textContent += ' — DEFAULT';
+            }
+
+            option.setAttribute('data-lang', voice.lang);
+            option.setAttribute('data-name', voice.name);
+            voiceSelect.appendChild(option);
+        });
+    }
+
+    // Handles async voice loading in browsers like Chrome
+    if (synth.onvoiceschanged !== undefined) {
+        synth.onvoiceschanged = populateVoiceList;
+    } else {
+        populateVoiceList();
+    }
+
+    // Update slider visual numbers
+    rateInput.addEventListener('input', () => rateVal.textContent = `${rateInput.value}x`);
+    pitchInput.addEventListener('input', () => pitchVal.textContent = pitchInput.value);
+
+    // Speak function
+    speakBtn.addEventListener('click', () => {
+        // Prevent stacking if already speaking
+        if (synth.speaking) {
+            synth.cancel();
+        }
+
+        if (textInput.value !== '') {
+            const utterance = new SpeechSynthesisUtterance(textInput.value);
+            
+            // Best-effort for iOS: Filter strictly by language instead of voice name
+            const voices = window.speechSynthesis.getVoices();
+            const iosVoice = voices.find(voice => voice.lang === 'en-US' || voice.lang === 'en_US');
+
+            if (iosVoice) {
+                utterance.voice = iosVoice; 
+            }
+            window.speechSynthesis.speak(utterance);
+        }
+    });
+/*
+            // Set properties
+            utterance.rate = rateInput.value;
+            utterance.pitch = pitchInput.value;
+            
+            // Match chosen voice from dropdown
+            const selectedVoiceName = voiceSelect.selectedOptions[0].getAttribute('data-name');
+            utterance.voice = voices.find(voice => voice.name === selectedVoiceName);
+
+            synth.speak(utterance);
+        }
+    });
+
+    // Stop function
+    stopBtn.addEventListener('click', () => {
+        synth.cancel();
+    });
+*/
+
+</script>
+
+</body>
+</html>

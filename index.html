@@ -1,108 +1,78 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en-UK">
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <meta name="theme-color" content="#0b0b0b" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="Radar BR" />
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0b0b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Radar BR">
 
-    <title>Radar BR</title>
+  <title>Boirds</title>
 
-    <link rel="manifest" href="manifest.json" />
-    <link rel="icon" href="img/tb-192.png" />
-    <link rel="apple-touch-icon" href="img/tb-192.png" />
-    <link rel="stylesheet" href="css/style.css" />
-  </head>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/tb-192.png">
+  <link rel="apple-touch-icon" href="img/tb-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
 
-  <body>
-    <main id="app">
-      <section id="statusPanel">
-        <div id="gpsStatus">GPS: aguardando</div>
+<body>
+  <main id="app">
+    <section id="statusPanel">
+      <div id="gpsStatus">GPS: aguardando</div>
+    </section>
+
+    <section id="radarPanel" aria-label="Distância até o radar">
+      <div id="distanceSign">
+        <span id="radarDistanceValue">--</span>
+        <span id="radarDistanceUnit">m</span>
+      </div>
+    </section>
+
+    <section id="speedPanel" aria-label="Velocidade atual">
+      <div id="speedometerWrapper">
+        <canvas id="speedometerCanvas" width="960" height="960" aria-label="Velocímetro"></canvas>
+      </div>
+    </section>
+
+    <section id="limitPanel" aria-label="Limite do radar">
+      <div id="limitSign">
+        <span id="radarLimit">--</span>
+        <span id="limitUnit">km/h</span>
+      </div>
+    </section>
+
+    <section id="bottomPanel">
+      <div id="messagePanel">
+        <div id="message"></div>
+      </div>
+
+      <section id="controls" aria-label="Controles">
+        <button id="btnStart" class="compactButton gpsButton active" type="button">INICIAR GPS</button>
+        <button id="btnSoundTest" class="compactButton iconButton" type="button" aria-label="Testar som">
+          <img src="img/sT.svg" alt="">
+        </button>
+        <button id="btnVolumeDown" class="compactButton iconButton" type="button" aria-label="Diminuir volume">
+          <img src="img/s-.svg" alt="">
+        </button>
+        <button id="btnVolumeUp" class="compactButton iconButton" type="button" aria-label="Aumentar volume">
+          <img src="img/s+.svg" alt="">
+        </button>
       </section>
 
-      <section id="radarPanel" class="hidden" aria-label="Alerta de radar">
-        <div id="distanceSign">
-          <span id="radarDistanceValue">--</span>
-          <span id="radarDistanceUnit">m</span>
-        </div>
+      <footer id="appFooter">
+        <span id="dbStatus">Base: não carregada</span>
+        <span class="footerSeparator">•</span>
+        <span id="appVersion">v--</span>
+      </footer>
+    </section>
+  </main>
 
-        <div id="limitSign" aria-label="Limite do radar">
-          <span id="radarLimit">--</span>
-        </div>
-      </section>
-
-      <section id="speedPanel" aria-label="Velocidade atual">
-        <div id="speedValue">--</div>
-        <div id="speedUnit">km/h</div>
-      </section>
-
-      <section id="gpsPermissionPanel" class="hidden">
-        <div class="gpsPermissionTitle">LOCALIZAÇÃO BLOQUEADA</div>
-        <div class="gpsPermissionText">
-          No iPhone, confirme:
-          <br />1. Ajustes → Privacidade e Segurança → Serviços de Localização:
-          ATIVADO. <br />2. Ajustes → Apps → Safari → Localização: PERGUNTAR ou
-          PERMITIR. <br />3. No Safari, abra este site → menu da página →
-          Ajustes do Site → Localização: PERMITIR. <br />4. Se disponível,
-          mantenha Localização Precisa ativada. <br /><br />Depois reabra o
-          Radar BR e tente novamente.
-        </div>
-        <button id="btnGpsRetry" type="button">TENTAR GPS NOVAMENTE</button>
-      </section>
-
-      <section id="bottomPanel">
-        <div id="messagePanel">
-          <div id="message"></div>
-        </div>
-
-        <section id="controls" aria-label="Controles">
-          <button id="btnStart" class="compactButton gpsButton" type="button">
-            GPS
-          </button>
-          <button
-            id="btnSoundTest"
-            class="compactButton iconButton"
-            type="button"
-            aria-label="Testar som"
-          >
-            <img src="img/sT.svg" alt="" />
-          </button>
-          <button
-            id="btnVolumeDown"
-            class="compactButton iconButton"
-            type="button"
-            aria-label="Diminuir volume"
-          >
-            <img src="img/s-.svg" alt="" />
-          </button>
-          <button
-            id="btnVolumeUp"
-            class="compactButton iconButton"
-            type="button"
-            aria-label="Aumentar volume"
-          >
-            <img src="img/s+.svg" alt="" />
-          </button>
-        </section>
-
-        <footer id="appFooter">
-          <span id="dbStatus">Base: não carregada</span>
-          <span class="footerSeparator">•</span>
-          <span id="appVersion">v--</span>
-        </footer>
-      </section>
-    </main>
-
-    <script src="js/helper.js"></script>
-    <script src="js/alert.js"></script>
-    <script src="js/radar.js"></script>
-    <script src="js/gps.js"></script>
-    <script src="js/app.js"></script>
-  </body>
+  <script src="js/helper.js"></script>
+  <script src="js/alert.js"></script>
+  <script src="js/radar.js"></script>
+  <script src="js/gps.js"></script>
+  <script src="js/app.js"></script>
+</body>
 </html>

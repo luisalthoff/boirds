@@ -2,60 +2,219 @@ var appCurrentRadarSpeedLimit = null;
 var appCurrentSpeed = null;
 var appWakeLock = null;
 
-async function appWakeLockEnable() {
-  if (!("wakeLock" in navigator)) {
-    console.log("Wake Lock not supported");
-    return;
-  }
+var SPEEDOMETER_MAX_KMH = 220;
+var SPEEDOMETER_BLUE = "#38bdf8";
+var SPEEDOMETER_RED = "#ff3b30";
+var SPEEDOMETER_BLACK = "#0b0b0b";
+var SPEEDOMETER_WHITE = "#ffffff";
 
-  if (appWakeLock !== null) {
-    return;
-  }
-
-  try {
-    appWakeLock = await navigator.wakeLock.request("screen");
-
-    appWakeLock.addEventListener("release", function() {
-      appWakeLock = null;
-      console.log("Wake Lock released");
-    });
-
-    console.log("Wake Lock enabled");
-  } catch (error) {
-    appWakeLock = null;
-    console.log("Wake Lock error:", error);
-  }
+async function appWakeLockEnable()
+{ 
+  if (appWakeLock !== null) {return;}
+  appWakeLock = await navigator.wakeLock.request("screen");
+  appWakeLock.addEventListener("release", function() {appWakeLock = null;});
 }
 
-function appInit() {
+function speedometerColorFor(kmh)
+{
+  if (typeof appCurrentRadarSpeedLimit === "number" &&
+      kmh > appCurrentRadarSpeedLimit) {
+    return SPEEDOMETER_RED;
+  }
+  return SPEEDOMETER_BLUE;
+}
+
+function speedometerDraw() {
+  var canvas = document.getElementById("speedometerCanvas");
+  var ctx;
+  var centerX;
+  var centerY;
+  var radius;
+  var startAngle;
+  var endAngle;
+  var totalAngle;
+  var totalTicks;
+  var i;
+  var kmh;
+  var angle;
+  var isMajor;
+  var tickLength;
+  var innerR;
+  var outerR;
+  var color;
+  var textRadius;
+  var x;
+  var y;
+  var shownSpeed;
+  var needleSpeed;
+  var needleAngle;
+  var needleLength;
+  var tailLength;
+
+  if (!canvas) {return;}
+
+  ctx = canvas.getContext("2d");
+  centerX = canvas.width / 2;
+  centerY = canvas.height / 2;
+  radius = 385;
+  startAngle = Math.PI * 0.75;
+  endAngle = Math.PI * 2.25;
+  totalAngle = endAngle - startAngle;
+  totalTicks = SPEEDOMETER_MAX_KMH / 2;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Tick marks: blue normally. When a radar is active, only the part above
+  // the actual limit becomes red.
+  for (i = 0; i <= totalTicks; i++) {
+    kmh = i * 2;
+    angle = startAngle + (kmh / SPEEDOMETER_MAX_KMH) * totalAngle;
+    isMajor = i % 5 === 0;
+    tickLength = isMajor ? 34 : 17;
+    outerR = radius;
+    innerR = radius - tickLength;
+    color = speedometerColorFor(kmh);
+
+    ctx.beginPath();
+    ctx.moveTo(
+      centerX + Math.cos(angle) * innerR,
+      centerY + Math.sin(angle) * innerR
+    );
+    ctx.lineTo(
+      centerX + Math.cos(angle) * outerR,
+      centerY + Math.sin(angle) * outerR
+    );
+    ctx.lineWidth = isMajor ? 6 : 3;
+    ctx.strokeStyle = color;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.stroke();
+  }
+
+  // Analog speed numbers.
+  ctx.font = '700 48px Arial, Helvetica, sans-serif';
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  textRadius = radius - 78;
+
+  for (kmh = 0; kmh <= SPEEDOMETER_MAX_KMH; kmh += 20) {
+    angle = startAngle + (kmh / SPEEDOMETER_MAX_KMH) * totalAngle;
+    color = speedometerColorFor(kmh);
+    x = centerX + Math.cos(angle) * textRadius;
+    y = centerY + Math.sin(angle) * textRadius;
+
+    ctx.fillStyle = color;
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0
+    ctx.fillText(String(kmh), x, y);
+  }
+
+  // Unit label in the center.
+  ctx.shadowBlur = 0;
+  ctx.font = '700 28px Arial, Helvetica, sans-serif';
+  ctx.fillStyle = SPEEDOMETER_BLUE;
+  ctx.fillText("km/h", centerX, centerY - 92);
+
+  // Needle. It always uses the exact same red as the speed-limit sign.
+  needleSpeed = typeof appCurrentSpeed === "number"
+    ? Math.max(0, Math.min(appCurrentSpeed, SPEEDOMETER_MAX_KMH))
+    : 0;
+  needleAngle = startAngle + (needleSpeed / SPEEDOMETER_MAX_KMH) * totalAngle;
+  needleLength = radius - 54;
+  tailLength = 42;
+
+  ctx.beginPath();
+  ctx.moveTo(
+    centerX - Math.cos(needleAngle) * tailLength,
+    centerY - Math.sin(needleAngle) * tailLength
+  );
+  ctx.lineTo(
+    centerX + Math.cos(needleAngle) * needleLength,
+    centerY + Math.sin(needleAngle) * needleLength
+  );
+  ctx.lineWidth = 11;
+  ctx.lineCap = "round";
+  ctx.strokeStyle = SPEEDOMETER_RED;
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 30, 0, Math.PI * 2);
+  ctx.fillStyle = SPEEDOMETER_RED;
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, 11, 0, Math.PI * 2);
+  ctx.fillStyle = SPEEDOMETER_BLACK;
+  ctx.shadowBlur = 0;
+  ctx.fill();
+
+  // Large digital speed. It remains blue; the analog scale itself shows the
+  // radar threshold in red, so the driver's current speed is always easy to identify.
+  shownSpeed = typeof appCurrentSpeed === "number"
+    ? String(Math.round(appCurrentSpeed))
+    : "--";
+
+  ctx.font = '900 158px "Courier New", Courier, monospace';
+  ctx.fillStyle = SPEEDOMETER_BLUE;
+  ctx.shadowColor = 'transparent';
+  ctx.shadowBlur = 0;
+  ctx.fillText(shownSpeed, centerX, centerY + 235);
+  ctx.shadowBlur = 0;
+}
+
+function appInit()
+{
+  var button;
+
+  try {appLoadRadars();} catch (error) {console.error("Radar database startup failed:", error);}
+  
+  speedometerDraw();
   appLoadVersion();
   appWakeLockEnable();
 
-  document.getElementById("btnStart").addEventListener("click", function() {
-    alertPrepareAudio();
+  button = document.getElementById("btnStart");
+  if (button) {
+    button.addEventListener("click", function() {
+      alertPrepareAudio();
 
-    if (gpsWatchId === null && !gpsPermissionRequesting) {
-      gpsStart();
-    } else if (gpsWatchId !== null) {
-      gpsStop();
-    }
-  });
+      // Restore the proven v0.6.2 behavior: the first GPS request happens
+      // directly inside the user's click event instead of during app startup.
+      if (gpsWatchId === null && !gpsPermissionRequesting) {
+        gpsStart();
+      } else if (gpsWatchId !== null) {
+        gpsStop();
+      }
+    });
+  }
 
-  document.getElementById("btnGpsRetry").addEventListener("click", function() {
-    appHideGpsPermissionHelp();
-    gpsStart();
-  });
+  button = document.getElementById("btnSoundTest");
+  if (button) {
+    button.addEventListener("click", alertTestSound);
+  }
 
-  document.getElementById("btnSoundTest").addEventListener("click", alertTestSound);
-  document.getElementById("btnVolumeUp").addEventListener("click", alertVolumeUp);
-  document.getElementById("btnVolumeDown").addEventListener("click", alertVolumeDown);
+  button = document.getElementById("btnVolumeUp");
+  if (button) {
+    button.addEventListener("click", alertVolumeUp);
+  }
 
-  appLoadRadars();
+  button = document.getElementById("btnVolumeDown");
+  if (button) {
+    button.addEventListener("click", alertVolumeDown);
+  }
 
-  if ("serviceWorker" in navigator) {
+  if ("serviceWorker" in navigator &&
+      location.hostname !== "localhost" &&
+      location.hostname !== "127.0.0.1") {
     window.addEventListener("load", function() {
       navigator.serviceWorker.register("sw.js").then(function(registration) {
         registration.update();
+      }).catch(function(error) {
+        console.error("Service Worker registration failed:", error);
       });
     });
   }
@@ -65,7 +224,7 @@ function appLoadRadars() {
   fetch("data/radars.json")
     .then(function(response) {
       if (!response.ok) {
-        throw new Error("Base de radares indisponível1");
+        throw new Error("Base de radares indisponível");
       }
 
       return response.json();
@@ -82,7 +241,7 @@ function appLoadRadars() {
       console.error("Radar database load failed:", error);
       radarSetList([]);
       appUpdateRadarStatus(0, "");
-      appSetMessage("Base de radares indisponível2.");
+      appSetMessage("Base de radares indisponível.");
     });
 }
 
@@ -132,86 +291,74 @@ function appUpdateRadarStatus(count, updatedAt) {
   document.getElementById("dbStatus").textContent = text;
 }
 
-function appShowGpsPermissionHelp() {
-  document.getElementById("gpsPermissionPanel").className = "";
-}
+function appSetSpeedometerVisible(visible) {
+  var panel = document.getElementById("speedPanel");
 
-function appHideGpsPermissionHelp() {
-  document.getElementById("gpsPermissionPanel").className = "hidden";
+  if (!panel) {
+    return;
+  }
+
+  panel.className = visible ? "" : "hidden";
 }
 
 function appGpsStarted() {
   var button = document.getElementById("btnStart");
 
-  button.disabled = false;
-  button.textContent = "GPS ON";
-  button.classList.add("active");
   document.getElementById("gpsStatus").textContent = "GPS: ativo";
+
+  if (button) {
+    button.disabled = false;
+    button.textContent = "GPS ON";
+    button.className = "compactButton gpsButton active";
+  }
 }
 
 function appGpsStopped() {
   var button = document.getElementById("btnStart");
 
-  button.disabled = false;
-  button.textContent = "GPS";
-  button.classList.remove("active");
   document.getElementById("gpsStatus").textContent = "GPS: parado";
-  document.getElementById("speedValue").textContent = "--";
+
+  if (button) {
+    button.disabled = false;
+    button.textContent = "INICIAR GPS";
+    button.className = "compactButton gpsButton active";
+  }
   appCurrentSpeed = null;
   appShowRadar(null);
-}
-
-function appUpdateSpeedColor() {
-  var speedValue = document.getElementById("speedValue");
-
-  speedValue.classList.remove("safeSpeed");
-  speedValue.classList.remove("overLimit");
-
-  if (typeof appCurrentSpeed !== "number" || !appCurrentRadarSpeedLimit) {
-    return;
-  }
-
-  if (appCurrentSpeed > appCurrentRadarSpeedLimit) {
-    speedValue.classList.add("overLimit");
-  } else {
-    speedValue.classList.add("safeSpeed");
-  }
+  appSetSpeedometerVisible(false);
 }
 
 function appGpsUpdate(position) {
-  var speedText = "--";
-  var speedValue = document.getElementById("speedValue");
-
-  if (typeof position.speed === "number") {
-    speedText = Math.round(position.speed);
-  }
-
-  speedValue.textContent = speedText;
   appCurrentSpeed = typeof position.speed === "number" ? position.speed : null;
-  appUpdateSpeedColor();
+  appSetSpeedometerVisible(true);
+  speedometerDraw();
 
   document.getElementById("gpsStatus").textContent =
     "GPS: ±" + Math.round(position.accuracy) + " m";
 }
 
 function appShowRadar(result) {
-  var panel = document.getElementById("radarPanel");
+  var radarPanel = document.getElementById("radarPanel");
+  var limitPanel = document.getElementById("limitPanel");
 
   if (!result) {
-    panel.className = "hidden";
+    radarPanel.className = "hidden";
+    limitPanel.className = "hidden";
     appCurrentRadarSpeedLimit = null;
-    appUpdateSpeedColor();
+    speedometerDraw();
     return;
   }
 
-  panel.className = "";
+  radarPanel.className = "";
+  limitPanel.className = "";
   appCurrentRadarSpeedLimit = Number(result.radar.speed) || null;
-  appUpdateSpeedColor();
 
   document.getElementById("radarLimit").textContent =
     appCurrentRadarSpeedLimit ? appCurrentRadarSpeedLimit : "?";
   document.getElementById("radarDistanceValue").textContent =
     Math.max(0, Math.round(result.distance));
+
+  speedometerDraw();
 }
 
 document.addEventListener("visibilitychange", function() {
@@ -222,6 +369,7 @@ document.addEventListener("visibilitychange", function() {
 
 document.addEventListener("click", function() {
   appWakeLockEnable();
+  alertPrepareAudio();
 }, { once: true });
 
 document.addEventListener("DOMContentLoaded", appInit);

@@ -54,7 +54,7 @@ function alertLoadVoice() {
   alertVoice = voices.find(function(voice) {
     return String(voice.lang).toLowerCase() === "en-UK";
   }) || voices.find(function(voice) {
-    return String(voice.lang).toLowerCase().indexOf("en") === 0;
+    return String(voice.lang).toLowerCase().indexOf("en") === 2;
   }) || null;
 }
 

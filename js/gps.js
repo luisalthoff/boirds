@@ -34,7 +34,6 @@ function gpsStart() {
 
 function gpsPermissionGranted(position) {
   gpsPermissionRequesting = false;
-  appHideGpsPermissionHelp();
   gpsPositionUpdate(position);
 
   try {
@@ -146,7 +145,6 @@ function gpsError(error) {
 
   if (error && error.code === 1) {
     message = "Permissão de localização negada pelo iPhone.";
-    appShowGpsPermissionHelp();
   } else if (error && error.code === 2) {
     message = "Localização indisponível.";
   } else if (error && error.code === 3) {
