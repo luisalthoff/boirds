@@ -160,7 +160,7 @@ function speedometerDraw() {
     : "--";
 
   ctx.font = '900 158px "Courier New", Courier, monospace';
-  ctx.fillStyle = SPEEDOMETER_BLUE;
+  ctx.fillStyle = SPEEDOMETER_BLACK;
   ctx.shadowColor = 'transparent';
   ctx.shadowBlur = 0;
   ctx.fillText(shownSpeed, centerX, centerY + 235);
